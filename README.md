@@ -5,7 +5,7 @@ DayOne builds an optimized, time-blocked evening that fits before your bedtime â
 automatic breaks, a live run timer, 5-minutes-left reminders, and a floating
 picture-in-picture timer.
 
-**Live demo:** https://flowday-25383.netlify.app
+**Live demo:** https://dayone-planner.netlify.app
 
 ## Run
 
