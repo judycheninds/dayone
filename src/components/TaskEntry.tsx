@@ -11,8 +11,23 @@ export function TaskEntry() {
   const addTask = useStore((s) => s.addTask);
   const removeTask = useStore((s) => s.removeTask);
   const clearCompleted = useStore((s) => s.clearCompleted);
+  const addCategory = useStore((s) => s.addCategory);
   const catOf = categoryMap(categories);
   const done = tasks.filter((t) => t.status === 'done');
+
+  const CAT_PALETTE = ['#0ea5e9', '#14b8a6', '#f59e0b', '#ec4899', '#8b5cf6', '#10b981', '#ef4444', '#6366f1'];
+  const [addingCat, setAddingCat] = useState(false);
+  const [catName, setCatName] = useState('');
+  const [catColor, setCatColor] = useState(CAT_PALETTE[0]);
+
+  const createCategory = () => {
+    if (!catName.trim()) return;
+    const id = addCategory(catName, catColor);
+    setCategory(id);
+    setCatName('');
+    setAddingCat(false);
+    setCatColor(CAT_PALETTE[(categories.length + 1) % CAT_PALETTE.length]);
+  };
 
   const [title, setTitle] = useState('');
   const [category, setCategory] = useState<Category>('homework');
@@ -89,7 +104,50 @@ export function TaskEntry() {
               </button>
             );
           })}
+          <button
+            type="button"
+            onClick={() => setAddingCat((v) => !v)}
+            className="inline-flex items-center gap-1 rounded-full border border-dashed border-stone-300 px-3 py-1.5 text-xs font-medium text-stone-500 transition hover:border-stone-400 hover:text-stone-700"
+          >
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round">
+              <path d="M12 5v14M5 12h14" />
+            </svg>
+            New
+          </button>
         </div>
+
+        {addingCat && (
+          <div className="flex items-center gap-2 rounded-xl border border-stone-200 bg-stone-50 p-2">
+            <input
+              type="color"
+              value={catColor}
+              onChange={(e) => setCatColor(e.target.value)}
+              className="h-8 w-8 shrink-0 cursor-pointer rounded-lg border border-stone-200 bg-white p-0"
+              aria-label="Category color"
+            />
+            <input
+              autoFocus
+              value={catName}
+              onChange={(e) => setCatName(e.target.value)}
+              onKeyDown={(e) => {
+                if (e.key === 'Enter') {
+                  e.preventDefault();
+                  createCategory();
+                }
+                if (e.key === 'Escape') setAddingCat(false);
+              }}
+              placeholder="New category — e.g. Dinner, Robotics practice"
+              className={`${input} flex-1`}
+            />
+            <button
+              type="button"
+              onClick={createCategory}
+              className="shrink-0 rounded-xl bg-stone-900 px-4 py-2.5 text-sm font-medium text-white transition hover:bg-stone-800"
+            >
+              Add
+            </button>
+          </div>
+        )}
 
         <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
           <label className="block">

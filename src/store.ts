@@ -80,7 +80,7 @@ interface State {
   setStartMin: (m: number) => void;
 
   // categories
-  addCategory: (label: string, color: string) => void;
+  addCategory: (label: string, color: string) => string;
   updateCategory: (id: string, patch: Partial<CategoryDef>) => void;
   removeCategory: (id: string) => void;
 
@@ -198,13 +198,13 @@ export const useStore = create<State>()((set, get) => ({
   updatePrefs: (p) => set((s) => ({ prefs: { ...s.prefs, ...p } })),
   setStartMin: (startMin) => set({ startMin }),
 
-  addCategory: (label, color) =>
+  addCategory: (label, color) => {
+    const id = `c-${uid()}`;
     set((s) => ({
-      categories: [
-        ...s.categories,
-        { id: `c-${uid()}`, label: label.trim() || 'New category', color, weight: 5 },
-      ],
-    })),
+      categories: [...s.categories, { id, label: label.trim() || 'New category', color, weight: 5 }],
+    }));
+    return id;
+  },
   updateCategory: (id, patch) =>
     set((s) => ({
       categories: s.categories.map((c) => (c.id === id ? { ...c, ...patch } : c)),
