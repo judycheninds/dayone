@@ -89,6 +89,7 @@ interface State {
   removeTask: (id: string) => void;
   completeTask: (id: string, actualMinutes?: number) => void;
   addTimeToTask: (id: string, minutes: number) => void;
+  setTaskDetails: (id: string, details: string) => void;
   clearCompleted: () => void;
   /** Mark a task's reward as granted by the parent. */
   claimReward: (id: string, claimed: boolean) => void;
@@ -221,6 +222,10 @@ export const useStore = create<State>()((set, get) => ({
   addTimeToTask: (id, minutes) =>
     set((s) => ({
       tasks: s.tasks.map((t) => (t.id === id ? { ...t, estMinutes: t.estMinutes + minutes } : t)),
+    })),
+  setTaskDetails: (id, details) =>
+    set((s) => ({
+      tasks: s.tasks.map((t) => (t.id === id ? { ...t, details } : t)),
     })),
   clearCompleted: () => set((s) => ({ tasks: s.tasks.filter((t) => t.status !== 'done') })),
   claimReward: (id, claimed) =>

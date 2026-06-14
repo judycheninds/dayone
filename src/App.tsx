@@ -6,8 +6,10 @@ import { TaskEntry } from './components/TaskEntry';
 import { Timeline } from './components/Timeline';
 import { RunMode } from './components/RunMode';
 import { RewardsCard } from './components/RewardsCard';
+import { TaskDetailsCard } from './components/TaskDetailsCard';
 import { Settings } from './components/Settings';
 import { CloudSync } from './components/CloudSync';
+import { TimeBackground } from './components/TimeBackground';
 
 export default function App() {
   const account = useStore((s) => s.account);
@@ -23,6 +25,7 @@ export default function App() {
   if (!account) {
     return (
       <>
+        <TimeBackground />
         <CloudSync />
         <Onboarding />
       </>
@@ -31,6 +34,7 @@ export default function App() {
 
   return (
     <div className="mx-auto min-h-full max-w-3xl px-4 pb-20 sm:px-6">
+      <TimeBackground />
       <CloudSync />
 
       <header className="flex items-center justify-between gap-3 py-6">
@@ -97,6 +101,7 @@ export default function App() {
           </div>
           <TaskEntry />
           <Timeline />
+          <TaskDetailsCard />
           <RewardsCard />
         </div>
       ) : (

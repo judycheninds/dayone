@@ -42,6 +42,8 @@ export interface Task {
   actualMinutes?: number; // filled in once completed / overrun
   /** If set, the task is pinned to this start time (minutes since midnight). */
   fixedStartMin?: number;
+  /** Free-form notes / details for the task. */
+  details?: string;
   /** Optional reward a parent agreed to give for finishing this task. */
   reward?: string;
   /** True once the parent has actually granted the reward. */

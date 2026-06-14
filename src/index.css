@@ -18,11 +18,8 @@ body {
   -webkit-font-smoothing: antialiased;
   text-rendering: optimizeLegibility;
   letter-spacing: -0.011em;
-  /* Calm warm-neutral canvas; crisp white cards lift off it */
-  background:
-    radial-gradient(75rem 60rem at 50% -20%, rgba(120, 113, 108, 0.06), transparent 60%),
-    #efece6;
-  background-attachment: fixed;
+  /* Flat fallback; the live time-of-day gradient is painted by TimeBackground. */
+  background: #efece6;
 }
 
 /* Subtle scrollbars */
