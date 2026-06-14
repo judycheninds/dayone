@@ -4,7 +4,7 @@
  * own namespaced key. This is demo-grade auth — fine for a client-only app, not
  * a substitute for a real server.
  */
-import type { CategoryDef, Prefs, Task } from '../types';
+import { DEFAULT_CATEGORIES, DEFAULT_PREFS, type CategoryDef, type Prefs, type Task } from '../types';
 
 const USERS_KEY = 'dayone-users';
 const SESSION_KEY = 'dayone-session';
@@ -63,6 +63,41 @@ export function loadUserData(username: string): UserSnapshot | null {
 }
 export function saveUserData(username: string, snap: UserSnapshot) {
   localStorage.setItem(dataKey(username), JSON.stringify(snap));
+}
+
+/**
+ * Seed a built-in demo account (tester / test1234) so the public login always
+ * works on a fresh browser. Idempotent; does not change the active session.
+ */
+export function ensureDemoUser(): void {
+  try {
+    const users = loadUsers();
+    if (users['tester']) return;
+    // Precomputed SHA-256 of "test1234".
+    users['tester'] = {
+      email: 'tester@dayone.app',
+      passHash: '937e8d5fbb48bd4949536cd65b8d35c426b80d2f830c5c308e2cdec422ae2244',
+    };
+    saveUsers(users);
+    const day = new Date();
+    const dueTomorrow = new Date(day.getTime() + 86400000);
+    dueTomorrow.setHours(23, 59, 0, 0);
+    const due = dueTomorrow.toISOString();
+    saveUserData('tester', {
+      name: 'tester',
+      email: 'tester@dayone.app',
+      prefs: { ...DEFAULT_PREFS },
+      startMin: 15 * 60,
+      categories: DEFAULT_CATEGORIES.map((c) => ({ ...c })),
+      tasks: [
+        { id: 'demo1', title: 'Math problem set', category: 'homework', importance: 4, dueISO: due, estMinutes: 60, status: 'pending', reward: '30 min screen time' },
+        { id: 'demo2', title: 'Study for biology test', category: 'study-test', importance: 5, dueISO: due, estMinutes: 90, status: 'pending' },
+        { id: 'demo3', title: 'Take out the trash', category: 'chores', importance: 2, dueISO: due, estMinutes: 15, status: 'pending', reward: '$2' },
+      ],
+    });
+  } catch {
+    /* localStorage unavailable — ignore */
+  }
 }
 
 /** Create a new account. Throws if the username is taken. */

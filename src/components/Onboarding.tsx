@@ -200,6 +200,29 @@ export function Onboarding() {
           <button type="submit" disabled={busy} className={`mt-2 w-full py-3 ${btnPrimary}`}>
             {busy ? 'Please wait…' : isSignup ? 'Create account' : 'Log in'}
           </button>
+
+          <button
+            type="button"
+            disabled={busy}
+            onClick={async () => {
+              setError('');
+              setBusy(true);
+              try {
+                await loginLocal('tester', 'test1234');
+              } catch (err) {
+                setError(err instanceof Error ? err.message : 'Could not open demo.');
+              } finally {
+                setBusy(false);
+              }
+            }}
+            className="mt-3 w-full rounded-xl border border-dashed border-stone-300 py-2.5 text-sm font-medium text-stone-600 transition hover:border-stone-400 hover:bg-stone-50"
+          >
+            ✨ Try the demo account
+          </button>
+          <p className="mt-2 text-center text-xs text-stone-400">
+            Demo login — username <span className="font-medium text-stone-500">tester</span> ·
+            password <span className="font-medium text-stone-500">test1234</span>
+          </p>
         </form>
       </div>
     </div>
