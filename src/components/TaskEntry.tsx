@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { useStore } from '../store';
 import { categoryMap, type Category, type Importance } from '../types';
 import { DUE_PRESETS, type DuePreset, dueLabel, resolveDue } from '../lib/dueDate';
-import { fmtDur } from '../lib/time';
+import { fmtDur, fmtMin, parseHHMM } from '../lib/time';
 import { Card, SectionLabel, input, btnPrimary } from './ui';
 
 export function TaskEntry() {
@@ -21,6 +21,9 @@ export function TaskEntry() {
   const [dueDate, setDueDate] = useState('');
   const [est, setEst] = useState(45);
   const [reward, setReward] = useState('');
+  const [timed, setTimed] = useState(false);
+  const [startT, setStartT] = useState('18:30');
+  const [endT, setEndT] = useState('19:30');
 
   const now = new Date();
   const pending = tasks.filter((t) => t.status === 'pending');
@@ -28,12 +31,21 @@ export function TaskEntry() {
   const submit = (e: React.FormEvent) => {
     e.preventDefault();
     if (!title.trim()) return;
+    let estMinutes = est;
+    let fixedStartMin: number | undefined;
+    if (timed) {
+      const s = parseHHMM(startT);
+      const en = parseHHMM(endT);
+      estMinutes = Math.max(5, en - s);
+      fixedStartMin = s;
+    }
     addTask({
       title: title.trim(),
       category,
       importance,
       dueISO: resolveDue(duePreset, now, dueDate),
-      estMinutes: est,
+      estMinutes,
+      fixedStartMin,
       reward: reward.trim() || undefined,
     });
     setTitle('');
@@ -109,16 +121,54 @@ export function TaskEntry() {
             </select>
           </label>
 
-          <label className="block">
-            <span className="mb-1.5 block text-xs text-stone-500">Est. time</span>
-            <select value={est} onChange={(e) => setEst(Number(e.target.value))} className={selCls}>
-              {[15, 30, 45, 60, 90, 120, 150, 180].map((m) => (
-                <option key={m} value={m}>
-                  {fmtDur(m)}
-                </option>
-              ))}
-            </select>
-          </label>
+          {!timed && (
+            <label className="block">
+              <span className="mb-1.5 block text-xs text-stone-500">Est. time</span>
+              <select value={est} onChange={(e) => setEst(Number(e.target.value))} className={selCls}>
+                {[15, 30, 45, 60, 90, 120, 150, 180].map((m) => (
+                  <option key={m} value={m}>
+                    {fmtDur(m)}
+                  </option>
+                ))}
+              </select>
+            </label>
+          )}
+        </div>
+
+        <div className="flex flex-wrap items-center gap-2">
+          <div className="flex rounded-lg border border-stone-200 bg-stone-50 p-0.5 text-xs">
+            <button
+              type="button"
+              onClick={() => setTimed(false)}
+              className={`rounded-md px-2.5 py-1 font-medium transition ${!timed ? 'bg-white text-stone-900 shadow-sm' : 'text-stone-500'}`}
+            >
+              Anytime
+            </button>
+            <button
+              type="button"
+              onClick={() => setTimed(true)}
+              className={`rounded-md px-2.5 py-1 font-medium transition ${timed ? 'bg-white text-stone-900 shadow-sm' : 'text-stone-500'}`}
+            >
+              Set time
+            </button>
+          </div>
+          {timed && (
+            <div className="flex items-center gap-1.5 text-sm text-stone-600">
+              <input
+                type="time"
+                value={startT}
+                onChange={(e) => setStartT(e.target.value)}
+                className="rounded-lg border border-stone-200 bg-white px-2 py-1.5 outline-none focus:border-indigo-400"
+              />
+              <span className="text-stone-400">–</span>
+              <input
+                type="time"
+                value={endT}
+                onChange={(e) => setEndT(e.target.value)}
+                className="rounded-lg border border-stone-200 bg-white px-2 py-1.5 outline-none focus:border-indigo-400"
+              />
+            </div>
+          )}
         </div>
 
         <div className="relative">
@@ -162,9 +212,15 @@ export function TaskEntry() {
                   )}
                 </span>
                 <span className="text-[11px] text-amber-500">{'★'.repeat(t.importance)}</span>
-                <span className="rounded-md bg-stone-100 px-1.5 py-0.5 text-[11px] text-stone-500">
-                  {dueLabel(t.dueISO, now)}
-                </span>
+                {t.fixedStartMin != null ? (
+                  <span className="rounded-md bg-indigo-50 px-1.5 py-0.5 text-[11px] font-medium text-indigo-600">
+                    🕒 {fmtMin(t.fixedStartMin)}–{fmtMin(t.fixedStartMin + t.estMinutes)}
+                  </span>
+                ) : (
+                  <span className="rounded-md bg-stone-100 px-1.5 py-0.5 text-[11px] text-stone-500">
+                    {dueLabel(t.dueISO, now)}
+                  </span>
+                )}
                 <span className="text-[11px] tabular-nums text-stone-500">{fmtDur(t.estMinutes)}</span>
                 <button
                   onClick={() => removeTask(t.id)}

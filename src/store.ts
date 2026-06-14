@@ -48,6 +48,7 @@ interface NewTaskInput {
   dueISO: string;
   estMinutes: number;
   reward?: string;
+  fixedStartMin?: number;
 }
 
 interface State {
@@ -246,20 +247,39 @@ export const useStore = create<State>()((set, get) => ({
     const now = new Date();
     const idx = activeIndex(snap, now);
     if (idx < 0) return;
-    const active = snap.blocks[idx];
-    const blocks = snap.blocks.map((b, i) => {
-      if (i < idx) return b;
-      if (i === idx) return { ...b, endMin: b.endMin + min };
-      return { ...b, startMin: b.startMin + min, endMin: b.endMin + min };
-    });
+
+    const blocks = snap.blocks.map((b) => ({ ...b }));
+    const active = blocks[idx];
+    active.endMin += min;
+
+    // Absorb the extra time by shortening upcoming breaks first; shift the rest.
+    let need = min;
+    let cursor = active.endMin;
+    for (let i = idx + 1; i < blocks.length; i++) {
+      const b = blocks[i];
+      const dur = b.endMin - b.startMin;
+      if (b.kind === 'break' && need > 0) {
+        const newDur = Math.max(0, dur - need);
+        need -= dur - newDur;
+        b.startMin = cursor;
+        b.endMin = cursor + newDur;
+      } else {
+        b.startMin = cursor;
+        b.endMin = cursor + dur;
+      }
+      cursor = b.endMin;
+    }
+    // Drop breaks that were shortened to nothing.
+    const cleaned = blocks.filter((b) => !(b.kind === 'break' && b.endMin <= b.startMin));
+
     const tasks =
       active.kind === 'task' && active.taskId
         ? s.tasks.map((t) => (t.id === active.taskId ? { ...t, estMinutes: t.estMinutes + min } : t))
         : s.tasks;
-    const last = blocks[blocks.length - 1];
+    const last = cleaned[cleaned.length - 1];
     set({
       tasks,
-      runSnapshot: { ...snap, blocks, fits: last ? last.endMin <= snap.endLimitMin : true },
+      runSnapshot: { ...snap, blocks: cleaned, fits: last ? last.endMin <= snap.endLimitMin : true },
     });
   },
 

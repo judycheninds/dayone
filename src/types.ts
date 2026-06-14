@@ -40,6 +40,8 @@ export interface Task {
   estMinutes: number; // expected duration
   status: TaskStatus;
   actualMinutes?: number; // filled in once completed / overrun
+  /** If set, the task is pinned to this start time (minutes since midnight). */
+  fixedStartMin?: number;
   /** Optional reward a parent agreed to give for finishing this task. */
   reward?: string;
   /** True once the parent has actually granted the reward. */
@@ -71,6 +73,8 @@ export interface ScheduleBlock {
   category?: Category;
   startMin: number; // minutes since midnight
   endMin: number;
+  /** True for a task pinned to a specific time slot. */
+  fixed?: boolean;
 }
 
 export interface ScheduleResult {

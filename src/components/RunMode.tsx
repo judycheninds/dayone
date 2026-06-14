@@ -7,6 +7,7 @@ import { isPipSupported } from '../lib/pip';
 import { TimerCard } from './TimerCard';
 import { PipPortal } from './PipPortal';
 import { RewardsCard } from './RewardsCard';
+import { Confetti } from './Confetti';
 import { Card, SectionLabel, btnGhost, btnPrimary } from './ui';
 
 export function RunMode() {
@@ -23,6 +24,7 @@ export function RunMode() {
 
   const [now, setNow] = useState(() => new Date());
   const [pipOpen, setPipOpen] = useState(false);
+  const [confettiKey, setConfettiKey] = useState(0);
 
   // 1-second tick while running.
   useEffect(() => {
@@ -101,6 +103,7 @@ export function RunMode() {
 
   const handleFinish = () => {
     if (active?.kind === 'task' && active.taskId) {
+      setConfettiKey((k) => k + 1); // celebrate completion in the bottom corner
       const t = tasks.find((x) => x.id === active.taskId);
       if (t?.reward) {
         notifyNow(
@@ -129,6 +132,7 @@ export function RunMode() {
 
   return (
     <div className="space-y-4">
+      <Confetti fireKey={confettiKey} />
       <Card pad={false} className="overflow-hidden">
         <div className="min-h-[360px]">{card(false)}</div>
         <div className="flex items-center justify-between border-t border-stone-200 px-4 py-3 text-xs">

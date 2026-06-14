@@ -98,6 +98,19 @@ describe('buildSchedule', () => {
     expect(a2.startMin).toBe(a1.startMin + 30);
   });
 
+  it('pins a fixed-time task to its slot and fills flexible tasks around it', () => {
+    const fixed = task({ title: 'piano', fixedStartMin: 18 * 60, estMinutes: 60 }); // 6–7pm
+    const flex = task({ title: 'reading', estMinutes: 30 });
+    const r = build([flex, fixed]); // now = 3pm
+    const pinned = r.blocks.find((b) => b.title === 'piano')!;
+    expect(pinned.startMin).toBe(18 * 60);
+    expect(pinned.endMin).toBe(19 * 60);
+    expect(pinned.fixed).toBe(true);
+    // flexible reading is placed before the pinned slot (it fits in the 3pm–6pm gap)
+    const reading = r.blocks.find((b) => b.title === 'reading')!;
+    expect(reading.endMin).toBeLessThanOrEqual(18 * 60);
+  });
+
   it('respects a custom category weight', () => {
     const cats = DEFAULT_CATEGORIES.map((c) => (c.id === 'chores' ? { ...c, weight: 10 } : c));
     const chore = task({ title: 'chore', category: 'chores', importance: 1 });

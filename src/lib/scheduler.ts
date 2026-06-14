@@ -48,54 +48,84 @@ export function buildSchedule(
   if (sleepMin <= nowMin) sleepMin += 1440;
   const endLimitMin = sleepMin - prefs.windDownMin;
 
-  const pending = tasks
-    .filter((t) => t.status === 'pending')
+  const pending = tasks.filter((t) => t.status === 'pending');
+
+  // Fixed-time tasks are pinned to their slots; flexible tasks fill the gaps.
+  const fixed = pending
+    .filter((t) => t.fixedStartMin != null)
+    .map((t) => ({ t, start: t.fixedStartMin!, end: t.fixedStartMin! + t.estMinutes }))
+    .sort((a, b) => a.start - b.start);
+
+  const flexible = pending
+    .filter((t) => t.fixedStartMin == null)
     .map((t) => ({ t, score: scoreTask(t, weightOf, now) }))
     .sort((a, b) => b.score - a.score || daysUntil(a.t.dueISO, now) - daysUntil(b.t.dueISO, now));
 
   const blocks: ScheduleBlock[] = [];
   const overflow: Task[] = [];
-  let cursor = nowMin;
-  let workSinceBreak = 0;
 
-  for (let i = 0; i < pending.length; i++) {
-    const task = pending[i].t;
-
-    // Insert a break if we've worked past the cadence and more work remains.
-    if (workSinceBreak >= prefs.breakCadence) {
-      const breakEnd = Math.min(cursor + prefs.breakMinutes, endLimitMin);
-      if (breakEnd > cursor) {
-        blocks.push({
-          id: blockId(),
-          kind: 'break',
-          title: 'Break',
-          startMin: cursor,
-          endMin: breakEnd,
-        });
-        cursor = breakEnd;
-      }
-      workSinceBreak = 0;
-    }
-
-    const taskEnd = cursor + task.estMinutes;
-    if (taskEnd > endLimitMin) {
-      overflow.push(task);
-      continue; // a later, smaller task might still fit
-    }
-
+  // 1) Place all pinned tasks at their exact times.
+  for (const f of fixed) {
     blocks.push({
       id: blockId(),
       kind: 'task',
-      taskId: task.id,
-      title: task.title,
-      category: task.category,
-      startMin: cursor,
-      endMin: taskEnd,
+      taskId: f.t.id,
+      title: f.t.title,
+      category: f.t.category,
+      startMin: f.start,
+      endMin: f.end,
+      fixed: true,
     });
-    cursor = taskEnd;
-    workSinceBreak += task.estMinutes;
   }
 
+  // 2) Compute free gaps between now and the bedtime limit, minus pinned slots.
+  const occupied = fixed
+    .map((f) => [Math.max(f.start, nowMin), f.end] as [number, number])
+    .filter(([s, e]) => e > nowMin && s < endLimitMin)
+    .sort((a, b) => a[0] - b[0]);
+
+  const gaps: [number, number][] = [];
+  let cursor = nowMin;
+  for (const [s, e] of occupied) {
+    if (s > cursor) gaps.push([cursor, Math.min(s, endLimitMin)]);
+    cursor = Math.max(cursor, e);
+  }
+  if (cursor < endLimitMin) gaps.push([cursor, endLimitMin]);
+
+  // 3) Fill gaps with flexible tasks in priority order, inserting breaks per cadence.
+  const placed = new Set<string>();
+  for (const [s, e] of gaps) {
+    let c = s;
+    let workSinceBreak = 0;
+    for (const { t } of flexible) {
+      if (placed.has(t.id)) continue;
+      if (workSinceBreak >= prefs.breakCadence) {
+        const breakEnd = Math.min(c + prefs.breakMinutes, e);
+        if (breakEnd > c) {
+          blocks.push({ id: blockId(), kind: 'break', title: 'Break', startMin: c, endMin: breakEnd });
+          c = breakEnd;
+          workSinceBreak = 0;
+        } else break; // gap is full
+      }
+      if (c + t.estMinutes <= e) {
+        blocks.push({
+          id: blockId(),
+          kind: 'task',
+          taskId: t.id,
+          title: t.title,
+          category: t.category,
+          startMin: c,
+          endMin: c + t.estMinutes,
+        });
+        c += t.estMinutes;
+        workSinceBreak += t.estMinutes;
+        placed.add(t.id);
+      }
+    }
+  }
+  for (const { t } of flexible) if (!placed.has(t.id)) overflow.push(t);
+
+  blocks.sort((a, b) => a.startMin - b.startMin);
   return { blocks, overflow, fits: overflow.length === 0, endLimitMin };
 }
 

@@ -93,7 +93,10 @@ export function Timeline() {
                     style={{ background: cat.color, color: fg }}
                   >
                     <div className="flex items-baseline justify-between gap-2">
-                      <span className="truncate font-semibold">{b.title}</span>
+                      <span className="truncate font-semibold">
+                        {b.fixed && <span title="Fixed time">🕒 </span>}
+                        {b.title}
+                      </span>
                       <span className="shrink-0 text-[11px] tabular-nums" style={{ color: fg, opacity: 0.85 }}>
                         {fmtDur(dur)}
                       </span>
