@@ -2,6 +2,7 @@ import { create } from 'zustand';
 import {
   DEFAULT_CATEGORIES,
   DEFAULT_PREFS,
+  normalizeWeight,
   type CategoryDef,
   type Importance,
   type Prefs,
@@ -120,6 +121,13 @@ function uid(): string {
   return Math.random().toString(36).slice(2, 10);
 }
 
+/** Load categories, normalizing legacy 0–10 weights to the 1–5 scale. */
+function loadCats(cats?: CategoryDef[]): CategoryDef[] {
+  return cats?.length
+    ? cats.map((c) => ({ ...c, weight: normalizeWeight(c.weight) }))
+    : DEFAULT_CATEGORIES;
+}
+
 const loggedOut = {
   account: null,
   cloudUserId: null,
@@ -161,7 +169,7 @@ export const useStore = create<State>()((set, get) => ({
       account: { name: snap.name, email: snap.email },
       prefs: snap.prefs,
       tasks: snap.tasks,
-      categories: snap.categories?.length ? snap.categories : DEFAULT_CATEGORIES,
+      categories: loadCats(snap.categories),
       startMin: snap.startMin,
     });
   },
@@ -175,7 +183,7 @@ export const useStore = create<State>()((set, get) => ({
       account: { name: snap.name, email: snap.email },
       prefs: snap.prefs,
       tasks: snap.tasks,
-      categories: snap.categories?.length ? snap.categories : DEFAULT_CATEGORIES,
+      categories: loadCats(snap.categories),
       startMin: snap.startMin,
     });
   },
@@ -193,7 +201,7 @@ export const useStore = create<State>()((set, get) => ({
       prefs: snap.prefs,
       tasks: snap.tasks,
       startMin: snap.startMin,
-      categories: snap.categories?.length ? snap.categories : DEFAULT_CATEGORIES,
+      categories: loadCats(snap.categories),
     }),
   setCloudUserId: (cloudUserId) => set({ cloudUserId }),
   updatePrefs: (p) => set((s) => ({ prefs: { ...s.prefs, ...p } })),

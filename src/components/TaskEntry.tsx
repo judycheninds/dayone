@@ -5,6 +5,7 @@ import { DUE_PRESETS, type DuePreset, dueLabel, resolveDue } from '../lib/dueDat
 import { fmtDur, fmtMin, parseHHMM } from '../lib/time';
 import { Card, SectionLabel, input, btnPrimary } from './ui';
 import { SwatchPicker } from './SwatchPicker';
+import { StarRating } from './StarRating';
 
 export function TaskEntry() {
   const tasks = useStore((s) => s.tasks);
@@ -171,13 +172,9 @@ export function TaskEntry() {
 
           <label className="block">
             <span className="mb-1.5 block text-xs text-stone-500">Importance</span>
-            <select value={importance} onChange={(e) => setImportance(Number(e.target.value) as Importance)} className={selCls}>
-              {[1, 2, 3, 4, 5].map((n) => (
-                <option key={n} value={n}>
-                  {'★'.repeat(n)}
-                </option>
-              ))}
-            </select>
+            <div className="flex h-[42px] items-center">
+              <StarRating value={importance} onChange={(n) => setImportance(n as Importance)} />
+            </div>
           </label>
 
           {!timed && (

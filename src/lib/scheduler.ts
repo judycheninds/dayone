@@ -14,7 +14,8 @@ export function scoreTask(
   const d = daysUntil(task.dueISO, now);
   // Urgency: overdue/today ≈ 10, a week out ≈ 1.25, decays smoothly.
   const urgency = clamp(10 / (1 + Math.max(d, 0)), 0, 10);
-  const category = clamp(weightOf[task.category] ?? 5, 0, 10);
+  // Category weight and importance are both 1–5; scale to a 0–10 sub-score.
+  const category = clamp((weightOf[task.category] ?? 3) * 2, 0, 10);
   const importance = clamp(task.importance * 2, 0, 10);
   return urgency + category + importance;
 }

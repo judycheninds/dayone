@@ -2,8 +2,10 @@ import { useState } from 'react';
 import { useStore } from '../store';
 import { parseHHMM, toHHMM } from '../lib/time';
 import { signOut as cloudSignOut } from '../lib/cloud';
+import { normalizeWeight } from '../types';
 import { input } from './ui';
 import { SwatchPicker } from './SwatchPicker';
+import { StarRating } from './StarRating';
 
 export function Settings({ onClose }: { onClose: () => void }) {
   const prefs = useStore((s) => s.prefs);
@@ -118,9 +120,7 @@ export function Settings({ onClose }: { onClose: () => void }) {
         </div>
 
         <div className="mb-5">
-          <span className="mb-2.5 block text-sm text-stone-600">
-            Categories &amp; priority (0–10)
-          </span>
+          <span className="mb-2.5 block text-sm text-stone-600">Categories &amp; priority</span>
           <div className="space-y-2.5">
             {categories.map((c) => (
               <div key={c.id} className="flex items-center gap-2.5">
@@ -131,20 +131,14 @@ export function Settings({ onClose }: { onClose: () => void }) {
                   className="h-6 w-6 shrink-0 cursor-pointer rounded-md border border-stone-200 bg-white p-0"
                   aria-label={`${c.label} color`}
                 />
-                <span className="w-28 shrink-0 truncate text-xs text-stone-600" title={c.label}>
+                <span className="flex-1 truncate text-sm text-stone-700" title={c.label}>
                   {c.label}
                 </span>
-                <input
-                  type="range"
-                  min={0}
-                  max={10}
-                  step={1}
-                  value={c.weight}
-                  onChange={(e) => updateCategory(c.id, { weight: Number(e.target.value) })}
-                  className="flex-1"
-                  style={{ accentColor: c.color }}
+                <StarRating
+                  value={normalizeWeight(c.weight)}
+                  onChange={(n) => updateCategory(c.id, { weight: n })}
+                  size={18}
                 />
-                <span className="w-4 text-right text-xs tabular-nums text-stone-600">{c.weight}</span>
                 {!c.builtin ? (
                   <button
                     onClick={() => removeCategory(c.id)}
