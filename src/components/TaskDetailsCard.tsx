@@ -57,7 +57,7 @@ export function TaskDetailsCard() {
                     onChange={(e) => setTaskDetails(t.id, e.target.value)}
                     placeholder="Add details, links, instructions, or anything to remember…"
                     rows={3}
-                    className="w-full resize-y rounded-lg border border-stone-200 bg-white px-3 py-2 text-sm text-stone-800 outline-none transition placeholder:text-stone-400 focus:border-[var(--accent)] focus:ring-2 focus:ring-[var(--accent-weak)]"
+                    className="w-full resize-y rounded-lg border border-stone-200 bg-[var(--card)] px-3 py-2 text-sm text-stone-800 outline-none transition placeholder:text-stone-400 focus:border-[var(--accent)] focus:ring-2 focus:ring-[var(--accent-weak)]"
                   />
                 </div>
               )}

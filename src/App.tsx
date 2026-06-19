@@ -7,6 +7,7 @@ import { Timeline } from './components/Timeline';
 import { RunMode } from './components/RunMode';
 import { RewardsCard } from './components/RewardsCard';
 import { TaskDetailsCard } from './components/TaskDetailsCard';
+import { ScheduleWarning } from './components/ScheduleWarning';
 import { Settings } from './components/Settings';
 import { CloudSync } from './components/CloudSync';
 import { TimeBackground } from './components/TimeBackground';
@@ -99,6 +100,7 @@ export default function App() {
           <Timeline />
           <TaskDetailsCard />
           <RewardsCard />
+          <ScheduleWarning />
         </div>
       ) : (
         <div className="fd-rise">

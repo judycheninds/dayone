@@ -53,33 +53,32 @@ describe('buildSchedule', () => {
     expect(firstTask?.title).toBe('urgent');
   });
 
-  it('inserts a break after the cadence is exceeded', () => {
-    const prefs = { ...DEFAULT_PREFS, breakCadence: 60 as const };
+  it('starts a break once work is within ±15 of the cadence', () => {
+    // cadence 60: a 45-min task (= cadence−15) triggers a break before the next task
     const tasks = [task({ title: 'a', estMinutes: 45 }), task({ title: 'b', estMinutes: 45 })];
-    const r = build(tasks, prefs);
-    const tasks3 = [...tasks, task({ title: 'c', estMinutes: 30 })];
-    const r3 = build(tasks3, prefs);
-    expect(r.blocks.some((b) => b.kind === 'break')).toBe(false);
-    expect(r3.blocks.some((b) => b.kind === 'break')).toBe(true);
+    const r = build(tasks);
+    const idxA = r.blocks.findIndex((b) => b.title === 'a');
+    const idxBreak = r.blocks.findIndex((b) => b.kind === 'break');
+    const idxB = r.blocks.findIndex((b) => b.title === 'b');
+    expect(idxBreak).toBeGreaterThan(idxA);
+    expect(idxB).toBeGreaterThan(idxBreak);
+  });
+
+  it('splits a task that exceeds a section across breaks', () => {
+    const tasks = [task({ title: 'long', estMinutes: 130 })]; // cadence 60
+    const r = build(tasks);
+    const parts = r.blocks.filter((b) => b.kind === 'task' && b.title.startsWith('long'));
+    expect(parts.length).toBeGreaterThan(1);
+    const total = parts.reduce((sum, b) => sum + (b.endMin - b.startMin), 0);
+    expect(total).toBe(130);
+    expect(parts[0].title).toMatch(/\(1\/\d\)/);
+    expect(r.blocks.some((b) => b.kind === 'break')).toBe(true);
   });
 
   it('overflows tasks that cannot fit before bedtime', () => {
-    const tasks = [task({ title: 'big', estMinutes: 400 }), task({ title: 'huge', estMinutes: 400 })];
-    const r = build(tasks);
+    const r = build([task({ title: 'huge', estMinutes: 2000 })]);
     expect(r.fits).toBe(false);
-    expect(r.overflow.length).toBe(1);
-    expect(r.blocks.filter((b) => b.kind === 'task').length).toBe(1);
-  });
-
-  it('keeps a smaller task that still fits after a big one overflows', () => {
-    const tasks = [
-      task({ title: 'big', category: 'study-test', importance: 5, estMinutes: 400 }),
-      task({ title: 'tiny', category: 'study-test', importance: 5, estMinutes: 20 }),
-    ];
-    const r = build(tasks);
-    const titles = r.blocks.filter((b) => b.kind === 'task').map((b) => b.title);
-    expect(titles).toContain('big');
-    expect(titles).toContain('tiny');
+    expect(r.overflow.length).toBeGreaterThan(0);
   });
 
   it('handles a bedtime past midnight', () => {

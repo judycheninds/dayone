@@ -93,38 +93,65 @@ export function buildSchedule(
   }
   if (cursor < endLimitMin) gaps.push([cursor, endLimitMin]);
 
-  // 3) Fill gaps with flexible tasks in priority order, inserting breaks per cadence.
-  const placed = new Set<string>();
+  // 3) Fill gaps with flexible tasks in priority order. Tasks are split across
+  //    "sections" (work blocks between breaks) when they don't fit, and breaks
+  //    start early once work is within ±TOL of the cadence.
+  const cadence = prefs.breakCadence;
+  const breakLen = prefs.breakMinutes;
+  const TOL = 15;
+  const queue = flexible.map((f) => ({ task: f.t, remaining: f.t.estMinutes }));
+  let qi = 0; // index of the first not-yet-finished task
+
   for (const [s, e] of gaps) {
     let c = s;
-    let workSinceBreak = 0;
-    for (const { t } of flexible) {
-      if (placed.has(t.id)) continue;
-      if (workSinceBreak >= prefs.breakCadence) {
-        const breakEnd = Math.min(c + prefs.breakMinutes, e);
-        if (breakEnd > c) {
-          blocks.push({ id: blockId(), kind: 'break', title: 'Break', startMin: c, endMin: breakEnd });
-          c = breakEnd;
-          workSinceBreak = 0;
-        } else break; // gap is full
+    let segWork = 0; // work done since the last break in this gap
+    while (qi < queue.length && c < e) {
+      // Start a break early once we're within ±TOL of the cadence target.
+      if (segWork >= cadence - TOL) {
+        const breakEnd = Math.min(c + breakLen, e);
+        blocks.push({ id: blockId(), kind: 'break', title: 'Break', startMin: c, endMin: breakEnd });
+        c = breakEnd;
+        segWork = 0;
+        continue;
       }
-      if (c + t.estMinutes <= e) {
-        blocks.push({
-          id: blockId(),
-          kind: 'task',
-          taskId: t.id,
-          title: t.title,
-          category: t.category,
-          startMin: c,
-          endMin: c + t.estMinutes,
-        });
-        c += t.estMinutes;
-        workSinceBreak += t.estMinutes;
-        placed.add(t.id);
-      }
+      const item = queue[qi];
+      const remToTarget = cadence - segWork;
+      // Finish the task here if it lands within TOL of the target; otherwise fill
+      // up to the target and carry the remainder into the next section (split).
+      const wholeFits = item.remaining <= remToTarget + TOL;
+      let chunk = wholeFits ? item.remaining : remToTarget;
+      chunk = Math.min(chunk, e - c);
+      if (chunk <= 0) break; // no room left in this gap
+      blocks.push({
+        id: blockId(),
+        kind: 'task',
+        taskId: item.task.id,
+        title: item.task.title,
+        category: item.task.category,
+        startMin: c,
+        endMin: c + chunk,
+      });
+      c += chunk;
+      segWork += chunk;
+      item.remaining -= chunk;
+      if (item.remaining <= 0) qi++;
     }
   }
-  for (const { t } of flexible) if (!placed.has(t.id)) overflow.push(t);
+  // Anything not fully placed overflows.
+  for (let i = qi; i < queue.length; i++) {
+    if (queue[i].remaining > 0) overflow.push(queue[i].task);
+  }
+
+  // Label split tasks "(k/n)".
+  const counts: Record<string, number> = {};
+  for (const b of blocks) if (b.kind === 'task' && b.taskId && !b.fixed) counts[b.taskId] = (counts[b.taskId] || 0) + 1;
+  const seen: Record<string, number> = {};
+  for (const b of blocks) {
+    if (b.kind === 'task' && b.taskId && !b.fixed && counts[b.taskId] > 1) {
+      seen[b.taskId] = (seen[b.taskId] || 0) + 1;
+      b.title = `${b.title} (${seen[b.taskId]}/${counts[b.taskId]})`;
+    }
+  }
 
   blocks.sort((a, b) => a.startMin - b.startMin);
   return { blocks, overflow, fits: overflow.length === 0, endLimitMin };
