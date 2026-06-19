@@ -116,7 +116,7 @@ export function Settings({ onClose }: { onClose: () => void }) {
         <div className="mb-5 flex items-center justify-between rounded-xl border border-black/[0.06] bg-white/50 px-3.5 py-3">
           <div>
             <div className="flex items-baseline gap-1.5">
-              <span className="text-sm font-medium text-stone-800">Competition reward</span>
+              <span className="text-sm font-medium text-stone-800">Completion reward</span>
               <span className="text-xs text-stone-400">with parent</span>
             </div>
             <div className="text-xs text-stone-500">Attach rewards to tasks and notify a parent</div>
