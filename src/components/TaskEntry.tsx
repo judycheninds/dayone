@@ -1,11 +1,14 @@
 import { useState } from 'react';
 import { useStore } from '../store';
 import { categoryMap, type Category, type Importance } from '../types';
-import { DUE_PRESETS, type DuePreset, dueLabel, resolveDue } from '../lib/dueDate';
-import { fmtDur, fmtMin, parseHHMM } from '../lib/time';
+import { dueLabel, resolveDue } from '../lib/dueDate';
+import { fmtDur, fmtMin } from '../lib/time';
 import { Card, SectionLabel, input, btnPrimary } from './ui';
 import { SwatchPicker } from './SwatchPicker';
 import { StarRating } from './StarRating';
+import { DurationField } from './DurationField';
+import { DueDatePicker } from './DueDatePicker';
+import { TimeField } from './TimeField';
 
 export function TaskEntry() {
   const tasks = useStore((s) => s.tasks);
@@ -31,47 +34,36 @@ export function TaskEntry() {
     setCatColor(CAT_PALETTE[(categories.length + 1) % CAT_PALETTE.length]);
   };
 
+  const now = new Date();
   const [title, setTitle] = useState('');
   const [category, setCategory] = useState<Category>('homework');
   const [importance, setImportance] = useState<Importance>(3);
-  const [duePreset, setDuePreset] = useState<DuePreset>('tomorrow');
-  const [dueDate, setDueDate] = useState('');
+  const [dueISO, setDueISO] = useState(() => resolveDue('tomorrow', new Date()));
   const [est, setEst] = useState(45);
   const [reward, setReward] = useState('');
   const [timed, setTimed] = useState(false);
-  const [startT, setStartT] = useState('18:30');
-  const [endT, setEndT] = useState('19:30');
+  const [startMin, setStartMin] = useState(18 * 60 + 30);
+  const [endMin, setEndMin] = useState(19 * 60 + 30);
 
-  const now = new Date();
   const pending = tasks.filter((t) => t.status === 'pending');
 
   const submit = (e: React.FormEvent) => {
     e.preventDefault();
     if (!title.trim()) return;
-    let estMinutes = est;
-    let fixedStartMin: number | undefined;
-    if (timed) {
-      const s = parseHHMM(startT);
-      const en = parseHHMM(endT);
-      estMinutes = Math.max(5, en - s);
-      fixedStartMin = s;
-    }
+    const estMinutes = timed ? Math.max(5, endMin - startMin) : est;
     addTask({
       title: title.trim(),
       category,
       importance,
-      dueISO: resolveDue(duePreset, now, dueDate),
+      dueISO,
       estMinutes,
-      fixedStartMin,
+      fixedStartMin: timed ? startMin : undefined,
       reward: reward.trim() || undefined,
     });
     setTitle('');
     setEst(45);
     setReward('');
   };
-
-  const selCls =
-    'w-full appearance-none rounded-xl border border-stone-200 bg-white px-3 py-2.5 text-sm text-stone-900 outline-none transition focus:border-[var(--accent)] focus:ring-2 focus:ring-[var(--accent-weak)]';
 
   return (
     <Card>
@@ -154,21 +146,8 @@ export function TaskEntry() {
         <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
           <label className="block">
             <span className="mb-1.5 block text-xs text-stone-500">Due</span>
-            <select value={duePreset} onChange={(e) => setDuePreset(e.target.value as DuePreset)} className={selCls}>
-              {DUE_PRESETS.map((p) => (
-                <option key={p.id} value={p.id}>
-                  {p.label}
-                </option>
-              ))}
-            </select>
+            <DueDatePicker value={dueISO} onChange={setDueISO} />
           </label>
-
-          {duePreset === 'date' && (
-            <label className="block">
-              <span className="mb-1.5 block text-xs text-stone-500">Date</span>
-              <input type="date" value={dueDate} onChange={(e) => setDueDate(e.target.value)} className={selCls} />
-            </label>
-          )}
 
           <label className="block">
             <span className="mb-1.5 block text-xs text-stone-500">Importance</span>
@@ -180,49 +159,33 @@ export function TaskEntry() {
           {!timed && (
             <label className="block">
               <span className="mb-1.5 block text-xs text-stone-500">Est. time</span>
-              <select value={est} onChange={(e) => setEst(Number(e.target.value))} className={selCls}>
-                {[15, 30, 45, 60, 90, 120, 150, 180].map((m) => (
-                  <option key={m} value={m}>
-                    {fmtDur(m)}
-                  </option>
-                ))}
-              </select>
+              <DurationField value={est} onChange={setEst} />
             </label>
           )}
         </div>
 
         <div className="flex flex-wrap items-center gap-2">
-          <div className="flex rounded-lg border border-stone-200 bg-stone-50 p-0.5 text-xs">
+          <div className="flex rounded-lg border border-stone-200 bg-white p-0.5 text-xs">
             <button
               type="button"
               onClick={() => setTimed(false)}
-              className={`rounded-md px-2.5 py-1 font-medium transition ${!timed ? 'bg-white text-stone-900 shadow-sm' : 'text-stone-500'}`}
+              className={`rounded-md px-2.5 py-1 font-medium transition ${!timed ? 'bg-stone-900 text-white shadow-sm' : 'text-stone-500'}`}
             >
               Anytime
             </button>
             <button
               type="button"
               onClick={() => setTimed(true)}
-              className={`rounded-md px-2.5 py-1 font-medium transition ${timed ? 'bg-white text-stone-900 shadow-sm' : 'text-stone-500'}`}
+              className={`rounded-md px-2.5 py-1 font-medium transition ${timed ? 'bg-stone-900 text-white shadow-sm' : 'text-stone-500'}`}
             >
               Set time
             </button>
           </div>
           {timed && (
             <div className="flex items-center gap-1.5 text-sm text-stone-600">
-              <input
-                type="time"
-                value={startT}
-                onChange={(e) => setStartT(e.target.value)}
-                className="rounded-lg border border-stone-200 bg-white px-2 py-1.5 outline-none focus:border-[var(--accent)]"
-              />
+              <TimeField value={startMin} onChange={setStartMin} />
               <span className="text-stone-400">–</span>
-              <input
-                type="time"
-                value={endT}
-                onChange={(e) => setEndT(e.target.value)}
-                className="rounded-lg border border-stone-200 bg-white px-2 py-1.5 outline-none focus:border-[var(--accent)]"
-              />
+              <TimeField value={endMin} onChange={setEndMin} />
             </div>
           )}
         </div>

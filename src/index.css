@@ -78,3 +78,32 @@ input[type='date']::-webkit-calendar-picker-indicator {
   opacity: 0.5;
   cursor: pointer;
 }
+
+/* Clean, themed range sliders — light track, accent thumb (no dark fill). */
+input[type='range'] {
+  -webkit-appearance: none;
+  appearance: none;
+  height: 6px;
+  border-radius: 9999px;
+  background: rgba(28, 25, 23, 0.12);
+  outline: none;
+}
+input[type='range']::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 16px;
+  height: 16px;
+  border-radius: 9999px;
+  background: var(--accent);
+  border: 2px solid #fff;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.25);
+  cursor: pointer;
+}
+input[type='range']::-moz-range-thumb {
+  width: 16px;
+  height: 16px;
+  border: 2px solid #fff;
+  border-radius: 9999px;
+  background: var(--accent);
+  cursor: pointer;
+}

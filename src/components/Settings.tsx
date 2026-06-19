@@ -1,11 +1,11 @@
 import { useState } from 'react';
 import { useStore } from '../store';
-import { parseHHMM, toHHMM } from '../lib/time';
 import { signOut as cloudSignOut } from '../lib/cloud';
 import { normalizeWeight } from '../types';
 import { input } from './ui';
 import { SwatchPicker } from './SwatchPicker';
 import { StarRating } from './StarRating';
+import { TimeField } from './TimeField';
 
 export function Settings({ onClose }: { onClose: () => void }) {
   const prefs = useStore((s) => s.prefs);
@@ -47,15 +47,10 @@ export function Settings({ onClose }: { onClose: () => void }) {
           </button>
         </div>
 
-        <label className="mb-4 block">
+        <div className="mb-4">
           <span className="mb-1.5 block text-sm text-stone-600">Sleep by</span>
-          <input
-            type="time"
-            value={toHHMM(prefs.sleepMin)}
-            onChange={(e) => updatePrefs({ sleepMin: parseHHMM(e.target.value) })}
-            className={input}
-          />
-        </label>
+          <TimeField value={prefs.sleepMin} onChange={(m) => updatePrefs({ sleepMin: m })} />
+        </div>
 
         <label className="mb-4 block">
           <span className="mb-1.5 block text-sm text-stone-600">
