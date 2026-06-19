@@ -71,7 +71,7 @@ export function TaskEntry() {
   };
 
   const selCls =
-    'w-full appearance-none rounded-xl border border-stone-200 bg-white px-3 py-2.5 text-sm text-stone-900 outline-none transition focus:border-indigo-400 focus:ring-2 focus:ring-indigo-200';
+    'w-full appearance-none rounded-xl border border-stone-200 bg-white px-3 py-2.5 text-sm text-stone-900 outline-none transition focus:border-[var(--accent)] focus:ring-2 focus:ring-[var(--accent-weak)]';
 
   return (
     <Card>
@@ -214,14 +214,14 @@ export function TaskEntry() {
                 type="time"
                 value={startT}
                 onChange={(e) => setStartT(e.target.value)}
-                className="rounded-lg border border-stone-200 bg-white px-2 py-1.5 outline-none focus:border-indigo-400"
+                className="rounded-lg border border-stone-200 bg-white px-2 py-1.5 outline-none focus:border-[var(--accent)]"
               />
               <span className="text-stone-400">–</span>
               <input
                 type="time"
                 value={endT}
                 onChange={(e) => setEndT(e.target.value)}
-                className="rounded-lg border border-stone-200 bg-white px-2 py-1.5 outline-none focus:border-indigo-400"
+                className="rounded-lg border border-stone-200 bg-white px-2 py-1.5 outline-none focus:border-[var(--accent)]"
               />
             </div>
           )}
@@ -269,7 +269,7 @@ export function TaskEntry() {
                 </span>
                 <span className="text-[11px] text-amber-500">{'★'.repeat(t.importance)}</span>
                 {t.fixedStartMin != null ? (
-                  <span className="rounded-md bg-indigo-50 px-1.5 py-0.5 text-[11px] font-medium text-indigo-600">
+                  <span className="rounded-md bg-[var(--accent-weak)] px-1.5 py-0.5 text-[11px] font-medium text-[var(--accent)]">
                     🕒 {fmtMin(t.fixedStartMin)}–{fmtMin(t.fixedStartMin + t.estMinutes)}
                   </span>
                 ) : (

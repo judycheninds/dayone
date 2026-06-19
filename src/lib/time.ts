@@ -40,6 +40,28 @@ export function toHHMM(min: number): string {
   return `${h.toString().padStart(2, '0')}:${(m % 60).toString().padStart(2, '0')}`;
 }
 
+/**
+ * Parse a freely-typed time into minutes since midnight, or null if invalid.
+ * Accepts "3:30 PM", "3pm", "15:00", "9", "9:05am", etc.
+ */
+export function parseFlexibleTime(s: string): number | null {
+  const str = s.trim().toLowerCase().replace(/\s+/g, ' ');
+  const m = str.match(/^(\d{1,2})(?::(\d{2}))?\s*(am|pm)?$/);
+  if (!m) return null;
+  let h = parseInt(m[1], 10);
+  const min = m[2] ? parseInt(m[2], 10) : 0;
+  const ap = m[3];
+  if (min > 59) return null;
+  if (ap) {
+    if (h < 1 || h > 12) return null;
+    if (ap === 'pm' && h < 12) h += 12;
+    if (ap === 'am' && h === 12) h = 0;
+  } else if (h > 23) {
+    return null;
+  }
+  return (h * 60 + min) % 1440;
+}
+
 /** Whole days until a due date, relative to `now`. Can be negative (overdue). */
 export function daysUntil(dueISO: string, now: Date): number {
   const due = new Date(dueISO).getTime();

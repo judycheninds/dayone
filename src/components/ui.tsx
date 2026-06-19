@@ -31,7 +31,7 @@ export function SectionLabel({ children }: { children: ReactNode }) {
 
 /** Reusable input class (light, rounded, soft focus). */
 export const input =
-  'w-full rounded-xl border border-stone-200 bg-white px-3.5 py-2.5 text-sm text-stone-900 placeholder:text-stone-400 outline-none transition focus:border-indigo-400 focus:ring-2 focus:ring-indigo-200';
+  'w-full rounded-xl border border-stone-200 bg-white px-3.5 py-2.5 text-sm text-stone-900 placeholder:text-stone-400 outline-none transition focus:border-[var(--accent)] focus:ring-2 focus:ring-[var(--accent-weak)]';
 
 /** Primary "ink" button — premium near-black. */
 export const btnPrimary =

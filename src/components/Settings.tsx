@@ -68,7 +68,7 @@ export function Settings({ onClose }: { onClose: () => void }) {
             step={15}
             value={prefs.windDownMin}
             onChange={(e) => updatePrefs({ windDownMin: Number(e.target.value) })}
-            className="w-full accent-indigo-500"
+            className="w-full accent-[var(--accent)]"
           />
         </label>
 
@@ -81,7 +81,7 @@ export function Settings({ onClose }: { onClose: () => void }) {
                 onClick={() => updatePrefs({ breakCadence: c })}
                 className={`flex-1 rounded-xl border px-3 py-2.5 text-sm transition ${
                   prefs.breakCadence === c
-                    ? 'border-indigo-400 bg-indigo-50 text-indigo-700'
+                    ? 'border-[var(--accent)] bg-[var(--accent-weak)] text-[var(--accent)]'
                     : 'border-stone-200 text-stone-500 hover:border-stone-300'
                 }`}
               >

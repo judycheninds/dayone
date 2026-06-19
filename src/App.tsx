@@ -10,6 +10,7 @@ import { TaskDetailsCard } from './components/TaskDetailsCard';
 import { Settings } from './components/Settings';
 import { CloudSync } from './components/CloudSync';
 import { TimeBackground } from './components/TimeBackground';
+import { TimeField } from './components/TimeField';
 
 export default function App() {
   const account = useStore((s) => s.account);
@@ -77,15 +78,10 @@ export default function App() {
         <div className="space-y-4 fd-rise">
           <div className="flex flex-wrap items-center gap-x-2 gap-y-1 rounded-2xl border border-stone-200 bg-white px-4 py-3 text-sm text-stone-600 shadow-sm">
             <span>Starting at</span>
-            <input
-              type="time"
-              value={toTime(startMin)}
-              onChange={(e) => setStartMin(toMin(e.target.value))}
-              className="rounded-lg border border-stone-200 bg-white px-2 py-1 text-stone-900 outline-none focus:border-indigo-400"
-            />
+            <TimeField value={startMin} onChange={setStartMin} />
             <span>
               · sleep by{' '}
-              <span className="font-medium text-stone-800">{fmtMin(prefs.sleepMin)}</span>
+              <span className="font-semibold text-[var(--accent)]">{fmtMin(prefs.sleepMin)}</span>
             </span>
             <span className="ml-auto inline-flex items-center gap-1.5 text-xs text-stone-400">
               {cloudUserId ? (
@@ -127,16 +123,6 @@ function Logo() {
   );
 }
 
-function toTime(min: number): string {
-  const h = Math.floor(min / 60);
-  const m = min % 60;
-  return `${h.toString().padStart(2, '0')}:${m.toString().padStart(2, '0')}`;
-}
-function toMin(s: string): number {
-  const [h, m] = s.split(':').map(Number);
-  return (h || 0) * 60 + (m || 0);
-}
-
 function Seg({
   active,
   onClick,
@@ -151,7 +137,7 @@ function Seg({
       onClick={onClick}
       className={`rounded-full px-4 py-1.5 text-sm font-medium transition ${
         active
-          ? 'bg-white text-stone-900 shadow-sm'
+          ? 'bg-white text-[var(--accent)] shadow-sm'
           : 'text-stone-500 hover:text-stone-900'
       }`}
     >
