@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 import { fmtMin, parseFlexibleTime } from '../lib/time';
+import { useOutsideClose } from '../lib/useOutsideClose';
 import { TimePickerPopover } from './TimePickerPopover';
 
 /**
@@ -15,6 +16,7 @@ export function TimeField({
 }) {
   const [text, setText] = useState(() => fmtMin(value));
   const [open, setOpen] = useState(false);
+  const ref = useOutsideClose<HTMLSpanElement>(open, () => setOpen(false));
 
   // Reflect external changes (e.g. picking from the popover).
   useEffect(() => {
@@ -28,7 +30,10 @@ export function TimeField({
   };
 
   return (
-    <span className="relative inline-flex items-center gap-1 rounded-lg border border-stone-200 bg-white px-2 py-1 transition focus-within:border-[var(--accent)] focus-within:ring-2 focus-within:ring-[var(--accent-weak)]">
+    <span
+      ref={ref}
+      className="relative inline-flex items-center gap-1 rounded-lg border border-stone-200 bg-white px-2 py-1 transition focus-within:border-[var(--accent)] focus-within:ring-2 focus-within:ring-[var(--accent-weak)]"
+    >
       <input
         value={text}
         onChange={(e) => setText(e.target.value)}
@@ -45,7 +50,7 @@ export function TimeField({
       />
       <button
         type="button"
-        onClick={() => setOpen((v) => !v)}
+        onClick={() => setOpen(true)}
         className="grid place-items-center text-stone-400 transition hover:text-[var(--accent)]"
         aria-label="Open time picker"
         title="Pick a time"

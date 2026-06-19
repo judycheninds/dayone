@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { fmtDur } from '../lib/time';
+import { useOutsideClose } from '../lib/useOutsideClose';
 
 /** Themed duration picker (hours + minutes) matching the time picker aesthetic. */
 export function DurationField({
@@ -10,6 +11,7 @@ export function DurationField({
   onChange: (minutes: number) => void;
 }) {
   const [open, setOpen] = useState(false);
+  const ref = useOutsideClose<HTMLDivElement>(open, () => setOpen(false));
   const h = Math.floor(value / 60);
   const m = value % 60;
 
@@ -26,10 +28,10 @@ export function DurationField({
     }`;
 
   return (
-    <div className="relative">
+    <div className="relative" ref={ref}>
       <button
         type="button"
-        onClick={() => setOpen((v) => !v)}
+        onClick={() => setOpen(true)}
         className="flex w-full items-center justify-between rounded-xl border border-stone-200 bg-white px-3 py-2.5 text-sm text-stone-900 transition hover:border-stone-300"
       >
         <span>{fmtDur(value)}</span>
@@ -39,8 +41,6 @@ export function DurationField({
         </svg>
       </button>
       {open && (
-        <>
-          <div className="fixed inset-0 z-40" onClick={() => setOpen(false)} />
           <div className="absolute left-0 top-full z-50 mt-2 w-64 rounded-2xl border border-black/[0.06] bg-[var(--card)] p-3.5 shadow-[0_16px_40px_-12px_rgba(28,25,23,0.45)] fd-rise">
             <div className="mb-3 text-center text-2xl font-bold tracking-tight text-[var(--accent)]">
               {fmtDur(value)}
@@ -69,7 +69,6 @@ export function DurationField({
               Done
             </button>
           </div>
-        </>
       )}
     </div>
   );

@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { dueLabel } from '../lib/dueDate';
 import { DAY_MS } from '../lib/time';
+import { useOutsideClose } from '../lib/useOutsideClose';
 
 const WEEKDAYS = ['S', 'M', 'T', 'W', 'T', 'F', 'S'];
 
@@ -24,6 +25,7 @@ export function DueDatePicker({
   const now = new Date();
   const selected = new Date(value);
   const [open, setOpen] = useState(false);
+  const ref = useOutsideClose<HTMLDivElement>(open, () => setOpen(false));
   const [view, setView] = useState(() => new Date(selected.getFullYear(), selected.getMonth(), 1));
 
   const pick = (d: Date) => {
@@ -44,10 +46,10 @@ export function DueDatePicker({
   const chip = 'rounded-full border border-black/[0.07] px-2.5 py-1 text-xs text-stone-600 transition hover:border-[var(--accent)] hover:text-[var(--accent)]';
 
   return (
-    <div className="relative">
+    <div className="relative" ref={ref}>
       <button
         type="button"
-        onClick={() => setOpen((v) => !v)}
+        onClick={() => setOpen(true)}
         className="flex w-full items-center justify-between rounded-xl border border-stone-200 bg-white px-3 py-2.5 text-sm text-stone-900 transition hover:border-stone-300"
       >
         <span>{dueLabel(value, now)}</span>
@@ -58,8 +60,6 @@ export function DueDatePicker({
       </button>
 
       {open && (
-        <>
-          <div className="fixed inset-0 z-40" onClick={() => setOpen(false)} />
           <div className="absolute left-0 top-full z-50 mt-2 w-72 rounded-2xl border border-black/[0.06] bg-[var(--card)] p-3.5 shadow-[0_16px_40px_-12px_rgba(28,25,23,0.45)] fd-rise">
             <div className="mb-2.5 flex items-center justify-between">
               <button type="button" onClick={() => setView(new Date(year, month - 1, 1))} className="grid h-7 w-7 place-items-center rounded-lg text-stone-500 transition hover:bg-black/[0.05]">
@@ -113,7 +113,6 @@ export function DueDatePicker({
               <button type="button" onClick={() => preset(7)} className={chip}>Next week</button>
             </div>
           </div>
-        </>
       )}
     </div>
   );

@@ -34,10 +34,7 @@ export function TimePickerPopover({
     }`;
 
   return (
-    <>
-      {/* click-away backdrop */}
-      <div className="fixed inset-0 z-40" onClick={onClose} />
-      <div className="absolute left-0 top-full z-50 mt-2 w-72 rounded-2xl border border-black/[0.06] bg-[var(--card)] p-3.5 shadow-[0_16px_40px_-12px_rgba(28,25,23,0.45)] fd-rise">
+    <div className="absolute left-0 top-full z-50 mt-2 w-72 rounded-2xl border border-black/[0.06] bg-[var(--card)] p-3.5 shadow-[0_16px_40px_-12px_rgba(28,25,23,0.45)] fd-rise">
         <div className="mb-3 text-center text-2xl font-bold tracking-tight text-[var(--accent)]">
           {fmtMin(value)}
         </div>
@@ -90,7 +87,6 @@ export function TimePickerPopover({
             Done
           </button>
         </div>
-      </div>
-    </>
+    </div>
   );
 }
