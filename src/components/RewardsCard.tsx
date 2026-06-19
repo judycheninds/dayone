@@ -7,6 +7,7 @@ export function RewardsCard() {
   const account = useStore((s) => s.account);
   const claimReward = useStore((s) => s.claimReward);
 
+  if (prefs.rewardsEnabled === false) return null; // feature turned off in settings
   const withReward = tasks.filter((t) => t.reward);
   if (withReward.length === 0) return null; // nothing to show until rewards are used
 

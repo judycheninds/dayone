@@ -105,7 +105,7 @@ export function RunMode() {
     if (active?.kind === 'task' && active.taskId) {
       setConfettiKey((k) => k + 1); // celebrate completion in the bottom corner
       const t = tasks.find((x) => x.id === active.taskId);
-      if (t?.reward) {
+      if (t?.reward && prefs.rewardsEnabled !== false) {
         notifyNow(
           'Reward unlocked! 🎁',
           `You earned "${t.reward}" for finishing ${t.title}. Notify ${prefs.parentName?.trim() || 'your parent'} to claim it.`,

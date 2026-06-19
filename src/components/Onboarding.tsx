@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { useStore } from '../store';
-import { DEFAULT_PREFS } from '../types';
+import { BREAK_CADENCES, BREAK_LENGTHS, DEFAULT_PREFS } from '../types';
 import { parseHHMM } from '../lib/time';
 import { input, btnPrimary } from './ui';
 
@@ -17,7 +17,8 @@ export function Onboarding() {
   const [showPassword, setShowPassword] = useState(false);
   const [sleep, setSleep] = useState('23:00');
   const [windDown, setWindDown] = useState(30);
-  const [cadence, setCadence] = useState<60 | 90>(60);
+  const [cadence, setCadence] = useState(60);
+  const [breakLen, setBreakLen] = useState(10);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState('');
 
@@ -33,6 +34,7 @@ export function Onboarding() {
           sleepMin: parseHHMM(sleep),
           windDownMin: windDown,
           breakCadence: cadence,
+          breakMinutes: breakLen,
         });
       } else {
         await loginLocal(username.trim(), password);
@@ -171,19 +173,38 @@ export function Onboarding() {
               </Field>
 
               <Field label="Take a break every">
-                <div className="flex gap-2">
-                  {([60, 90] as const).map((c) => (
+                <div className="flex flex-wrap gap-2">
+                  {BREAK_CADENCES.map((c) => (
                     <button
                       type="button"
                       key={c}
                       onClick={() => setCadence(c)}
-                      className={`flex-1 rounded-xl border px-3 py-2.5 text-sm transition ${
+                      className={`flex-1 rounded-xl border px-2 py-2.5 text-sm transition ${
                         cadence === c
                           ? 'border-[var(--accent)] bg-[var(--accent-weak)] text-[var(--accent)]'
                           : 'border-stone-200 text-stone-500 hover:border-stone-300'
                       }`}
                     >
-                      {c} min
+                      {c}m
+                    </button>
+                  ))}
+                </div>
+              </Field>
+
+              <Field label="Break length">
+                <div className="flex gap-2">
+                  {BREAK_LENGTHS.map((b) => (
+                    <button
+                      type="button"
+                      key={b}
+                      onClick={() => setBreakLen(b)}
+                      className={`flex-1 rounded-xl border px-2 py-2.5 text-sm transition ${
+                        breakLen === b
+                          ? 'border-[var(--accent)] bg-[var(--accent-weak)] text-[var(--accent)]'
+                          : 'border-stone-200 text-stone-500 hover:border-stone-300'
+                      }`}
+                    >
+                      {b}m
                     </button>
                   ))}
                 </div>

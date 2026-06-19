@@ -13,6 +13,7 @@ import { TimeField } from './TimeField';
 export function TaskEntry() {
   const tasks = useStore((s) => s.tasks);
   const categories = useStore((s) => s.categories);
+  const rewardsOn = useStore((s) => s.prefs.rewardsEnabled !== false);
   const addTask = useStore((s) => s.addTask);
   const removeTask = useStore((s) => s.removeTask);
   const clearCompleted = useStore((s) => s.clearCompleted);
@@ -190,19 +191,21 @@ export function TaskEntry() {
           )}
         </div>
 
-        <div className="relative">
-          <span className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-stone-400">
-            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8">
-              <path d="M20 12v9H4v-9M2 7h20v5H2zM12 22V7M12 7H7.5a2.5 2.5 0 0 1 0-5C11 2 12 7 12 7zM12 7h4.5a2.5 2.5 0 0 0 0-5C13 2 12 7 12 7z" />
-            </svg>
-          </span>
-          <input
-            value={reward}
-            onChange={(e) => setReward(e.target.value)}
-            placeholder="Reward when done (optional) — e.g. $5, 30 min screen time"
-            className={`${input} pl-9`}
-          />
-        </div>
+        {rewardsOn && (
+          <div className="relative">
+            <span className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-stone-400">
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8">
+                <path d="M20 12v9H4v-9M2 7h20v5H2zM12 22V7M12 7H7.5a2.5 2.5 0 0 1 0-5C11 2 12 7 12 7zM12 7h4.5a2.5 2.5 0 0 0 0-5C13 2 12 7 12 7z" />
+              </svg>
+            </span>
+            <input
+              value={reward}
+              onChange={(e) => setReward(e.target.value)}
+              placeholder="Reward when done (optional) — e.g. $5, 30 min screen time"
+              className={`${input} pl-9`}
+            />
+          </div>
+        )}
 
         <button type="submit" className={`w-full py-2.5 text-sm ${btnPrimary}`}>
           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round">
@@ -224,7 +227,7 @@ export function TaskEntry() {
                 <span className="h-2.5 w-2.5 shrink-0 rounded-full" style={{ background: cat.color }} />
                 <span className="flex-1 truncate text-stone-800">
                   {t.title}
-                  {t.reward && (
+                  {rewardsOn && t.reward && (
                     <span className="ml-2 rounded-md bg-amber-50 px-1.5 py-0.5 text-[10px] font-medium text-amber-700">
                       🎁 {t.reward}
                     </span>

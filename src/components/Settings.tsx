@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { useStore } from '../store';
 import { signOut as cloudSignOut } from '../lib/cloud';
-import { normalizeWeight } from '../types';
+import { BREAK_CADENCES, BREAK_LENGTHS, normalizeWeight } from '../types';
 import { input } from './ui';
 import { SwatchPicker } from './SwatchPicker';
 import { StarRating } from './StarRating';
@@ -19,6 +19,7 @@ export function Settings({ onClose }: { onClose: () => void }) {
 
   const [newLabel, setNewLabel] = useState('');
   const [newColor, setNewColor] = useState('#0ea5e9');
+  const rewardsOn = prefs.rewardsEnabled !== false;
 
   const addNew = () => {
     if (!newLabel.trim()) return;
@@ -68,51 +69,88 @@ export function Settings({ onClose }: { onClose: () => void }) {
         </label>
 
         <div className="mb-5">
-          <span className="mb-1.5 block text-sm text-stone-600">Break cadence</span>
-          <div className="flex gap-2">
-            {([60, 90] as const).map((c) => (
+          <span className="mb-1.5 block text-sm text-stone-600">Break every</span>
+          <div className="flex flex-wrap gap-2">
+            {BREAK_CADENCES.map((c) => (
               <button
                 key={c}
                 onClick={() => updatePrefs({ breakCadence: c })}
-                className={`flex-1 rounded-xl border px-3 py-2.5 text-sm transition ${
+                className={`flex-1 rounded-xl border px-2 py-2.5 text-sm transition ${
                   prefs.breakCadence === c
                     ? 'border-[var(--accent)] bg-[var(--accent-weak)] text-[var(--accent)]'
                     : 'border-stone-200 text-stone-500 hover:border-stone-300'
                 }`}
               >
-                every {c} min
+                {c}m
               </button>
             ))}
           </div>
         </div>
 
         <div className="mb-5">
-          <span className="mb-2.5 block text-sm text-stone-600">
-            Parent / guardian <span className="text-stone-400">(for reward alerts)</span>
-          </span>
-          <div className="space-y-2">
-            <input
-              className={input}
-              placeholder="Parent name (e.g. Mom)"
-              value={prefs.parentName ?? ''}
-              onChange={(e) => updatePrefs({ parentName: e.target.value })}
-            />
-            <input
-              className={input}
-              type="email"
-              placeholder="Parent email"
-              value={prefs.parentEmail ?? ''}
-              onChange={(e) => updatePrefs({ parentEmail: e.target.value })}
-            />
-            <input
-              className={input}
-              type="tel"
-              placeholder="Parent phone (for text)"
-              value={prefs.parentPhone ?? ''}
-              onChange={(e) => updatePrefs({ parentPhone: e.target.value })}
-            />
+          <span className="mb-1.5 block text-sm text-stone-600">Break length</span>
+          <div className="flex gap-2">
+            {BREAK_LENGTHS.map((b) => (
+              <button
+                key={b}
+                onClick={() => updatePrefs({ breakMinutes: b })}
+                className={`flex-1 rounded-xl border px-2 py-2.5 text-sm transition ${
+                  prefs.breakMinutes === b
+                    ? 'border-[var(--accent)] bg-[var(--accent-weak)] text-[var(--accent)]'
+                    : 'border-stone-200 text-stone-500 hover:border-stone-300'
+                }`}
+              >
+                {b}m
+              </button>
+            ))}
           </div>
         </div>
+
+        <div className="mb-5 flex items-center justify-between rounded-xl border border-black/[0.06] bg-white/50 px-3.5 py-3">
+          <div>
+            <div className="text-sm font-medium text-stone-800">Parent rewards</div>
+            <div className="text-xs text-stone-500">Attach rewards to tasks and notify a parent</div>
+          </div>
+          <button
+            type="button"
+            role="switch"
+            aria-checked={rewardsOn}
+            onClick={() => updatePrefs({ rewardsEnabled: !rewardsOn })}
+            className={`relative h-6 w-11 shrink-0 rounded-full transition ${rewardsOn ? 'bg-[var(--accent)]' : 'bg-stone-300'}`}
+          >
+            <span className={`absolute top-0.5 h-5 w-5 rounded-full bg-white shadow transition-all ${rewardsOn ? 'left-[22px]' : 'left-0.5'}`} />
+          </button>
+        </div>
+
+        {rewardsOn && (
+          <div className="mb-5">
+            <span className="mb-2.5 block text-sm text-stone-600">
+              Parent / guardian <span className="text-stone-400">(for reward alerts)</span>
+            </span>
+            <div className="space-y-2">
+              <input
+                className={input}
+                placeholder="Parent name (e.g. Mom)"
+                value={prefs.parentName ?? ''}
+                onChange={(e) => updatePrefs({ parentName: e.target.value })}
+              />
+              <input
+                className={input}
+                type="email"
+                placeholder="Parent email"
+                value={prefs.parentEmail ?? ''}
+                onChange={(e) => updatePrefs({ parentEmail: e.target.value })}
+              />
+              <input
+                className={input}
+                type="tel"
+                placeholder="Parent phone (for text)"
+                value={prefs.parentPhone ?? ''}
+                onChange={(e) => updatePrefs({ parentPhone: e.target.value })}
+              />
+            </div>
+          </div>
+        )}
 
         <div className="mb-5">
           <span className="mb-2.5 block text-sm text-stone-600">Categories &amp; priority</span>

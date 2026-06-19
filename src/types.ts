@@ -61,15 +61,22 @@ export interface Prefs {
   sleepMin: number;
   /** No tasks scheduled within this many minutes before sleep. */
   windDownMin: number;
-  /** Insert a break after this many minutes of cumulative work. */
-  breakCadence: 60 | 90;
+  /** Insert a break after this many minutes of cumulative work (60–120). */
+  breakCadence: number;
   /** Length of an inserted break. */
   breakMinutes: number;
+  /** Whether the parent-reward feature is enabled. */
+  rewardsEnabled: boolean;
   /** Parent / guardian contact for reward notifications. */
   parentName?: string;
   parentEmail?: string;
   parentPhone?: string;
 }
+
+/** Break-frequency options (minutes), 60–120 in 15-min steps. */
+export const BREAK_CADENCES = [60, 75, 90, 105, 120];
+/** Break-length options (minutes). */
+export const BREAK_LENGTHS = [5, 10, 15, 20];
 
 export type BlockKind = 'task' | 'break';
 
@@ -99,6 +106,7 @@ export const DEFAULT_PREFS: Prefs = {
   windDownMin: 30,
   breakCadence: 60,
   breakMinutes: 10,
+  rewardsEnabled: true,
 };
 
 /** Map of category id → definition, with fallback for unknown ids. */
