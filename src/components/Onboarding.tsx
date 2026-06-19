@@ -66,7 +66,7 @@ export function Onboarding() {
 
         <form
           onSubmit={submit}
-          className="rounded-3xl border border-stone-200/80 bg-white p-6 shadow-[0_1px_3px_rgba(28,25,23,0.05),0_24px_50px_-28px_rgba(28,25,23,0.45)] sm:p-7"
+          className="rounded-3xl border border-black/[0.06] bg-[var(--card)] p-6 shadow-[0_1px_3px_rgba(28,25,23,0.05),0_24px_50px_-28px_rgba(28,25,23,0.45)] sm:p-7"
         >
           <div className="mb-5 flex rounded-full border border-stone-200 bg-stone-100/70 p-1">
             {(['signup', 'login'] as Mode[]).map((m) => (

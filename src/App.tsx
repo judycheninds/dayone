@@ -76,7 +76,7 @@ export default function App() {
 
       {view === 'plan' ? (
         <div className="space-y-4 fd-rise">
-          <div className="flex flex-wrap items-center gap-x-2 gap-y-1 rounded-2xl border border-stone-200 bg-white px-4 py-3 text-sm text-stone-600 shadow-sm">
+          <div className="flex flex-wrap items-center gap-x-2 gap-y-1 rounded-2xl border border-black/[0.06] bg-[var(--card)] px-4 py-3 text-sm text-stone-600 shadow-sm">
             <span>Starting at</span>
             <TimeField value={startMin} onChange={setStartMin} />
             <span>

@@ -1,9 +1,10 @@
-import { useEffect, useRef, useState } from 'react';
-import { fmtMin, parseFlexibleTime, parseHHMM, toHHMM } from '../lib/time';
+import { useEffect, useState } from 'react';
+import { fmtMin, parseFlexibleTime } from '../lib/time';
+import { TimePickerPopover } from './TimePickerPopover';
 
 /**
- * Time control that supports direct typing (e.g. "3:30 PM") *and* the native
- * time picker (the clock button), keeping the familiar selection system.
+ * Time control that supports direct typing (e.g. "3:30 PM") *and* a pretty,
+ * themed picker popover (the clock button), keeping a familiar selection system.
  */
 export function TimeField({
   value,
@@ -13,9 +14,9 @@ export function TimeField({
   onChange: (minutes: number) => void;
 }) {
   const [text, setText] = useState(() => fmtMin(value));
-  const picker = useRef<HTMLInputElement>(null);
+  const [open, setOpen] = useState(false);
 
-  // Reflect external changes (e.g. picking from the native dialog).
+  // Reflect external changes (e.g. picking from the popover).
   useEffect(() => {
     setText(fmtMin(value));
   }, [value]);
@@ -27,7 +28,7 @@ export function TimeField({
   };
 
   return (
-    <span className="inline-flex items-center gap-1 rounded-lg border border-stone-200 bg-white px-2 py-1 transition focus-within:border-[var(--accent)] focus-within:ring-2 focus-within:ring-[var(--accent-weak)]">
+    <span className="relative inline-flex items-center gap-1 rounded-lg border border-stone-200 bg-white px-2 py-1 transition focus-within:border-[var(--accent)] focus-within:ring-2 focus-within:ring-[var(--accent-weak)]">
       <input
         value={text}
         onChange={(e) => setText(e.target.value)}
@@ -44,7 +45,7 @@ export function TimeField({
       />
       <button
         type="button"
-        onClick={() => picker.current?.showPicker?.()}
+        onClick={() => setOpen((v) => !v)}
         className="grid place-items-center text-stone-400 transition hover:text-[var(--accent)]"
         aria-label="Open time picker"
         title="Pick a time"
@@ -54,15 +55,7 @@ export function TimeField({
           <path d="M12 7v5l3 2" strokeLinecap="round" />
         </svg>
       </button>
-      <input
-        ref={picker}
-        type="time"
-        value={toHHMM(value)}
-        onChange={(e) => onChange(parseHHMM(e.target.value))}
-        tabIndex={-1}
-        aria-hidden
-        className="pointer-events-none absolute h-0 w-0 opacity-0"
-      />
+      {open && <TimePickerPopover value={value} onChange={onChange} onClose={() => setOpen(false)} />}
     </span>
   );
 }

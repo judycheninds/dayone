@@ -5,6 +5,8 @@
   /* Accent flips to the complement of the time-of-day background (set by TimeBackground). */
   --accent: #4f46e5;
   --accent-weak: rgba(79, 70, 229, 0.18);
+  /* Card/surface tint — a pale version of the complement (also set by TimeBackground). */
+  --card: #f2f2fb;
 }
 
 html,

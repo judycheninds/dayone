@@ -12,7 +12,7 @@ export function Card({
 }) {
   return (
     <div
-      className={`rounded-3xl border border-stone-200/80 bg-white shadow-[0_1px_3px_rgba(28,25,23,0.05),0_20px_44px_-22px_rgba(28,25,23,0.4)] ${
+      className={`rounded-3xl border border-black/[0.06] bg-[var(--card)] shadow-[0_1px_3px_rgba(28,25,23,0.05),0_20px_44px_-22px_rgba(28,25,23,0.4)] ${
         pad ? 'p-5 sm:p-6' : ''
       } ${className}`}
     >

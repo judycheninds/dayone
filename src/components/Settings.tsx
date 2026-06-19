@@ -32,7 +32,7 @@ export function Settings({ onClose }: { onClose: () => void }) {
       onClick={onClose}
     >
       <div
-        className="max-h-[90vh] w-full max-w-md overflow-y-auto rounded-3xl border border-stone-200 bg-white p-6 shadow-2xl fd-rise"
+        className="max-h-[90vh] w-full max-w-md overflow-y-auto rounded-3xl border border-black/[0.06] bg-[var(--card)] p-6 shadow-2xl fd-rise"
         onClick={(e) => e.stopPropagation()}
       >
         <div className="mb-5 flex items-center justify-between">
