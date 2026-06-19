@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
+import { createPortal } from 'react-dom';
 import { useStore } from '../store';
 import { fmtDur, fmtMin } from '../lib/time';
 
@@ -29,8 +30,8 @@ export function ScheduleWarning() {
   const needed = Math.max(15, Math.ceil(overMin / 15) * 15);
   const newSleep = (prefs.sleepMin + needed) % 1440;
 
-  return (
-    <div className="fixed inset-0 z-[80] grid place-items-center bg-stone-900/40 p-4 backdrop-blur-sm">
+  return createPortal(
+    <div className="fixed inset-0 z-[80] grid place-items-center bg-stone-900/60 p-4 backdrop-blur-sm">
       <div className="w-full max-w-sm rounded-3xl border border-black/[0.06] bg-[var(--card)] p-6 text-center shadow-2xl fd-rise">
         <div className="mx-auto mb-3 grid h-12 w-12 place-items-center rounded-full bg-amber-100 text-amber-600">
           <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
@@ -59,6 +60,7 @@ export function ScheduleWarning() {
           </button>
         </div>
       </div>
-    </div>
+    </div>,
+    document.body,
   );
 }

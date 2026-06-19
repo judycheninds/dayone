@@ -100,7 +100,6 @@ export default function App() {
           <Timeline />
           <TaskDetailsCard />
           <RewardsCard />
-          <ScheduleWarning />
         </div>
       ) : (
         <div className="fd-rise">
@@ -108,6 +107,9 @@ export default function App() {
         </div>
       )}
 
+      {/* Rendered outside any transformed (fd-rise) container so `fixed` is
+          relative to the viewport — centers and darkens the whole tab. */}
+      {view === 'plan' && <ScheduleWarning />}
       {showSettings && <Settings onClose={() => setShowSettings(false)} />}
     </div>
   );
