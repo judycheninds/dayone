@@ -1,8 +1,8 @@
 import { useState } from 'react';
 import { useStore } from '../store';
-import { BREAK_CADENCES, BREAK_LENGTHS, DEFAULT_PREFS } from '../types';
-import { parseHHMM } from '../lib/time';
+import { BREAK_CADENCES, BREAK_LENGTHS, DEFAULT_PREFS, WINDDOWN_OPTIONS } from '../types';
 import { input, btnPrimary } from './ui';
+import { TimeField } from './TimeField';
 
 type Mode = 'signup' | 'login';
 
@@ -15,7 +15,7 @@ export function Onboarding() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
-  const [sleep, setSleep] = useState('23:00');
+  const [sleep, setSleep] = useState(23 * 60);
   const [windDown, setWindDown] = useState(30);
   const [cadence, setCadence] = useState(60);
   const [breakLen, setBreakLen] = useState(10);
@@ -31,7 +31,7 @@ export function Onboarding() {
       if (mode === 'signup') {
         await signupLocal(username.trim(), email.trim(), password, {
           ...DEFAULT_PREFS,
-          sleepMin: parseHHMM(sleep),
+          sleepMin: sleep,
           windDownMin: windDown,
           breakCadence: cadence,
           breakMinutes: breakLen,
@@ -157,19 +157,26 @@ export function Onboarding() {
               </div>
 
               <Field label="I want to be asleep by">
-                <input type="time" className={input} value={sleep} onChange={(e) => setSleep(e.target.value)} />
+                <TimeField value={sleep} onChange={setSleep} />
               </Field>
 
-              <Field label={`Wind-down buffer · ${windDown} min`}>
-                <input
-                  type="range"
-                  min={0}
-                  max={90}
-                  step={15}
-                  value={windDown}
-                  onChange={(e) => setWindDown(Number(e.target.value))}
-                  className="w-full accent-[var(--accent)]"
-                />
+              <Field label="Wind-down buffer (no tasks before sleep)">
+                <div className="flex flex-wrap gap-2">
+                  {WINDDOWN_OPTIONS.map((w) => (
+                    <button
+                      type="button"
+                      key={w}
+                      onClick={() => setWindDown(w)}
+                      className={`flex-1 rounded-xl border px-2 py-2.5 text-sm transition ${
+                        windDown === w
+                          ? 'border-[var(--accent)] bg-[var(--accent-weak)] text-[var(--accent)]'
+                          : 'border-stone-200 text-stone-500 hover:border-stone-300'
+                      }`}
+                    >
+                      {w}m
+                    </button>
+                  ))}
+                </div>
               </Field>
 
               <Field label="Take a break every">

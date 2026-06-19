@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { useStore } from '../store';
 import { signOut as cloudSignOut } from '../lib/cloud';
-import { BREAK_CADENCES, BREAK_LENGTHS, normalizeWeight } from '../types';
+import { BREAK_CADENCES, BREAK_LENGTHS, WINDDOWN_OPTIONS, normalizeWeight } from '../types';
 import { input } from './ui';
 import { SwatchPicker } from './SwatchPicker';
 import { StarRating } from './StarRating';
@@ -19,6 +19,9 @@ export function Settings({ onClose }: { onClose: () => void }) {
 
   const [newLabel, setNewLabel] = useState('');
   const [newColor, setNewColor] = useState('#0ea5e9');
+  const [showParent2, setShowParent2] = useState(
+    !!(prefs.parent2Name || prefs.parent2Email || prefs.parent2Phone),
+  );
   const rewardsOn = prefs.rewardsEnabled !== false;
 
   const addNew = () => {
@@ -53,20 +56,24 @@ export function Settings({ onClose }: { onClose: () => void }) {
           <TimeField value={prefs.sleepMin} onChange={(m) => updatePrefs({ sleepMin: m })} />
         </div>
 
-        <label className="mb-4 block">
-          <span className="mb-1.5 block text-sm text-stone-600">
-            Wind-down buffer · {prefs.windDownMin} min
-          </span>
-          <input
-            type="range"
-            min={0}
-            max={90}
-            step={15}
-            value={prefs.windDownMin}
-            onChange={(e) => updatePrefs({ windDownMin: Number(e.target.value) })}
-            className="w-full accent-[var(--accent)]"
-          />
-        </label>
+        <div className="mb-5">
+          <span className="mb-1.5 block text-sm text-stone-600">Wind-down buffer</span>
+          <div className="flex flex-wrap gap-2">
+            {WINDDOWN_OPTIONS.map((w) => (
+              <button
+                key={w}
+                onClick={() => updatePrefs({ windDownMin: w })}
+                className={`flex-1 rounded-xl border px-2 py-2.5 text-sm transition ${
+                  prefs.windDownMin === w
+                    ? 'border-[var(--accent)] bg-[var(--accent-weak)] text-[var(--accent)]'
+                    : 'border-stone-200 text-stone-500 hover:border-stone-300'
+                }`}
+              >
+                {w}m
+              </button>
+            ))}
+          </div>
+        </div>
 
         <div className="mb-5">
           <span className="mb-1.5 block text-sm text-stone-600">Break every</span>
@@ -108,7 +115,10 @@ export function Settings({ onClose }: { onClose: () => void }) {
 
         <div className="mb-5 flex items-center justify-between rounded-xl border border-black/[0.06] bg-white/50 px-3.5 py-3">
           <div>
-            <div className="text-sm font-medium text-stone-800">Parent rewards</div>
+            <div className="flex items-baseline gap-1.5">
+              <span className="text-sm font-medium text-stone-800">Competition reward</span>
+              <span className="text-xs text-stone-400">with parent</span>
+            </div>
             <div className="text-xs text-stone-500">Attach rewards to tasks and notify a parent</div>
           </div>
           <button
@@ -123,32 +133,49 @@ export function Settings({ onClose }: { onClose: () => void }) {
         </div>
 
         {rewardsOn && (
-          <div className="mb-5">
-            <span className="mb-2.5 block text-sm text-stone-600">
-              Parent / guardian <span className="text-stone-400">(for reward alerts)</span>
-            </span>
-            <div className="space-y-2">
-              <input
-                className={input}
-                placeholder="Parent name (e.g. Mom)"
-                value={prefs.parentName ?? ''}
-                onChange={(e) => updatePrefs({ parentName: e.target.value })}
-              />
-              <input
-                className={input}
-                type="email"
-                placeholder="Parent email"
-                value={prefs.parentEmail ?? ''}
-                onChange={(e) => updatePrefs({ parentEmail: e.target.value })}
-              />
-              <input
-                className={input}
-                type="tel"
-                placeholder="Parent phone (for text)"
-                value={prefs.parentPhone ?? ''}
-                onChange={(e) => updatePrefs({ parentPhone: e.target.value })}
-              />
+          <div className="mb-5 space-y-3">
+            <div>
+              <span className="mb-2.5 block text-sm text-stone-600">
+                Parent / guardian <span className="text-stone-400">(for reward alerts)</span>
+              </span>
+              <div className="space-y-2">
+                <input className={input} placeholder="Parent name (e.g. Mom)" value={prefs.parentName ?? ''} onChange={(e) => updatePrefs({ parentName: e.target.value })} />
+                <input className={input} type="email" placeholder="Parent email" value={prefs.parentEmail ?? ''} onChange={(e) => updatePrefs({ parentEmail: e.target.value })} />
+                <input className={input} type="tel" placeholder="Parent phone (for text)" value={prefs.parentPhone ?? ''} onChange={(e) => updatePrefs({ parentPhone: e.target.value })} />
+              </div>
             </div>
+
+            {showParent2 ? (
+              <div>
+                <div className="mb-2.5 flex items-center justify-between">
+                  <span className="text-sm text-stone-600">Second parent / guardian</span>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      updatePrefs({ parent2Name: '', parent2Email: '', parent2Phone: '' });
+                      setShowParent2(false);
+                    }}
+                    className="text-xs text-stone-400 transition hover:text-rose-500"
+                  >
+                    Remove
+                  </button>
+                </div>
+                <div className="space-y-2">
+                  <input className={input} placeholder="Parent name (e.g. Dad)" value={prefs.parent2Name ?? ''} onChange={(e) => updatePrefs({ parent2Name: e.target.value })} />
+                  <input className={input} type="email" placeholder="Parent email" value={prefs.parent2Email ?? ''} onChange={(e) => updatePrefs({ parent2Email: e.target.value })} />
+                  <input className={input} type="tel" placeholder="Parent phone (for text)" value={prefs.parent2Phone ?? ''} onChange={(e) => updatePrefs({ parent2Phone: e.target.value })} />
+                </div>
+              </div>
+            ) : (
+              <button
+                type="button"
+                onClick={() => setShowParent2(true)}
+                className="flex w-full items-center justify-center gap-1.5 rounded-xl border border-dashed border-stone-300 py-2.5 text-sm font-medium text-stone-500 transition hover:border-[var(--accent)] hover:text-[var(--accent)]"
+              >
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round"><path d="M12 5v14M5 12h14" /></svg>
+                Add a second parent
+              </button>
+            )}
           </div>
         )}
 

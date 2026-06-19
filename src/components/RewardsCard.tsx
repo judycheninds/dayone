@@ -15,22 +15,26 @@ export function RewardsCard() {
   const claimed = withReward.filter((t) => t.status === 'done' && t.rewardClaimed);
   const pending = withReward.filter((t) => t.status !== 'done');
 
-  const parentName = prefs.parentName?.trim() || 'your parent';
+  const truthy = (x?: string): x is string => !!x;
+  const names = [prefs.parentName?.trim(), prefs.parent2Name?.trim()].filter(truthy);
+  const emails = [prefs.parentEmail?.trim(), prefs.parent2Email?.trim()].filter(truthy);
+  const phones = [prefs.parentPhone?.trim(), prefs.parent2Phone?.trim()].filter(truthy);
+  const parentName = names.join(' & ') || 'your parents';
   const student = account?.name || 'Your child';
 
-  // Build a pre-filled message for the parent about earned (unclaimed) rewards.
+  // Build a pre-filled message for the parent(s) about earned (unclaimed) rewards.
   const lines = earned.map((t) => `✓ ${t.title}  →  reward: ${t.reward}`);
   const subject = `${student} earned a reward on DayOne 🎉`;
   const body =
-    `Hi ${prefs.parentName?.trim() || 'there'},\n\n` +
+    `Hi ${names.join(' & ') || 'there'},\n\n` +
     `${student} just finished${earned.length > 1 ? ' these tasks' : ' a task'} on DayOne:\n\n` +
     `${lines.join('\n')}\n\n` +
     `Time for the reward! 🎁\n\n— sent from DayOne`;
 
-  const mailto = `mailto:${encodeURIComponent(prefs.parentEmail || '')}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
-  const sms = `sms:${prefs.parentPhone || ''}?body=${encodeURIComponent(body)}`;
-  const canEmail = !!prefs.parentEmail;
-  const canText = !!prefs.parentPhone;
+  const mailto = `mailto:${emails.map(encodeURIComponent).join(',')}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
+  const sms = `sms:${phones.join(',')}?body=${encodeURIComponent(body)}`;
+  const canEmail = emails.length > 0;
+  const canText = phones.length > 0;
 
   return (
     <Card>

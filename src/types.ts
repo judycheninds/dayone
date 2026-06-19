@@ -71,12 +71,18 @@ export interface Prefs {
   parentName?: string;
   parentEmail?: string;
   parentPhone?: string;
+  /** Optional second parent / guardian. */
+  parent2Name?: string;
+  parent2Email?: string;
+  parent2Phone?: string;
 }
 
 /** Break-frequency options (minutes), 60–120 in 15-min steps. */
 export const BREAK_CADENCES = [60, 75, 90, 105, 120];
 /** Break-length options (minutes). */
 export const BREAK_LENGTHS = [5, 10, 15, 20];
+/** Wind-down buffer options (minutes). */
+export const WINDDOWN_OPTIONS = [0, 15, 30, 45, 60];
 
 export type BlockKind = 'task' | 'break';
 
