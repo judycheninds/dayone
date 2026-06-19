@@ -96,6 +96,8 @@ export interface ScheduleBlock {
   endMin: number;
   /** True for a task pinned to a specific time slot. */
   fixed?: boolean;
+  /** Set when a task is split across sections: which piece this is. */
+  part?: { index: number; total: number };
 }
 
 export interface ScheduleResult {

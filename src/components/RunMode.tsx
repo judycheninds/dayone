@@ -115,9 +115,15 @@ export function RunMode() {
     reflowFinish();
   };
 
+  const activeTitle = active
+    ? active.part
+      ? `${active.title} (${active.part.index}/${active.part.total})`
+      : active.title
+    : '';
+
   const card = (compact: boolean) => (
     <TimerCard
-      title={active?.title ?? ''}
+      title={activeTitle}
       endMin={active?.endMin}
       color={color}
       secondsLeft={secondsLeft}
@@ -163,7 +169,10 @@ export function RunMode() {
                 <li key={b.id} className="flex items-center gap-3 rounded-xl border border-stone-200 px-3 py-2 text-sm">
                   <span className="w-20 shrink-0 tabular-nums text-xs text-stone-400">{fmtMin(b.startMin)}</span>
                   <span className="h-2 w-2 shrink-0 rounded-full" style={{ background: b.kind === 'break' ? '#0ea5e9' : cat?.color }} />
-                  <span className="flex-1 truncate text-stone-700">{b.kind === 'break' ? 'Break' : b.title}</span>
+                  <span className="flex-1 truncate text-stone-700">
+                    {b.kind === 'break' ? 'Break' : b.title}
+                    {b.part && <span className="ml-1 text-stone-400">({b.part.index}/{b.part.total})</span>}
+                  </span>
                   <span className="text-[11px] tabular-nums text-stone-500">{fmtDur(b.endMin - b.startMin)}</span>
                 </li>
               );

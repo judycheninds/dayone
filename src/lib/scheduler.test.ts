@@ -67,11 +67,11 @@ describe('buildSchedule', () => {
   it('splits a task that exceeds a section across breaks', () => {
     const tasks = [task({ title: 'long', estMinutes: 130 })]; // cadence 60
     const r = build(tasks);
-    const parts = r.blocks.filter((b) => b.kind === 'task' && b.title.startsWith('long'));
+    const parts = r.blocks.filter((b) => b.kind === 'task' && b.title === 'long');
     expect(parts.length).toBeGreaterThan(1);
     const total = parts.reduce((sum, b) => sum + (b.endMin - b.startMin), 0);
     expect(total).toBe(130);
-    expect(parts[0].title).toMatch(/\(1\/\d\)/);
+    expect(parts[0].part).toEqual({ index: 1, total: parts.length });
     expect(r.blocks.some((b) => b.kind === 'break')).toBe(true);
   });
 

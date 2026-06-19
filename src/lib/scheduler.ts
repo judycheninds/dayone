@@ -142,14 +142,14 @@ export function buildSchedule(
     if (queue[i].remaining > 0) overflow.push(queue[i].task);
   }
 
-  // Label split tasks "(k/n)".
+  // Tag split tasks with part info (kept off the title so the UI can style it).
   const counts: Record<string, number> = {};
   for (const b of blocks) if (b.kind === 'task' && b.taskId && !b.fixed) counts[b.taskId] = (counts[b.taskId] || 0) + 1;
   const seen: Record<string, number> = {};
   for (const b of blocks) {
     if (b.kind === 'task' && b.taskId && !b.fixed && counts[b.taskId] > 1) {
       seen[b.taskId] = (seen[b.taskId] || 0) + 1;
-      b.title = `${b.title} (${seen[b.taskId]}/${counts[b.taskId]})`;
+      b.part = { index: seen[b.taskId], total: counts[b.taskId] };
     }
   }
 
