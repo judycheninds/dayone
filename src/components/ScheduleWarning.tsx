@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
 import { useStore } from '../store';
+import { buildSchedule } from '../lib/scheduler';
 import { fmtDur, fmtMin } from '../lib/time';
 
 /**
@@ -9,12 +10,15 @@ import { fmtDur, fmtMin } from '../lib/time';
  */
 export function ScheduleWarning() {
   const schedule = useStore((s) => s.schedule);
+  const tasks = useStore((s) => s.tasks);
+  const categories = useStore((s) => s.categories);
+  const startMin = useStore((s) => s.startMin);
   const prefs = useStore((s) => s.prefs);
   const updatePrefs = useStore((s) => s.updatePrefs);
 
-  const result = schedule(new Date());
+  const now = new Date();
+  const result = schedule(now);
   const overflow = result.overflow;
-  const overMin = overflow.reduce((sum, t) => sum + t.estMinutes, 0);
 
   const [dismissed, setDismissed] = useState(false);
   const prev = useRef(overflow.length);
@@ -27,8 +31,13 @@ export function ScheduleWarning() {
 
   if (overflow.length === 0 || dismissed) return null;
 
-  const needed = Math.max(15, Math.ceil(overMin / 15) * 15);
-  const newSleep = (prefs.sleepMin + needed) % 1440;
+  // Run the schedule with no bedtime limit to find when everything actually ends
+  // (accounting for breaks), so one click moves bedtime exactly enough to fit.
+  const full = buildSchedule(tasks, { ...prefs, sleepMin: startMin + 24 * 60 }, categories, startMin, now);
+  const lastEnd = full.blocks.reduce((mx, b) => (b.kind === 'task' ? Math.max(mx, b.endMin) : mx), startMin);
+  const overMin = Math.max(0, lastEnd - result.endLimitMin);
+  const requiredSleep = lastEnd + prefs.windDownMin;
+  const newSleep = (((requiredSleep % 1440) + 1440) % 1440);
 
   return createPortal(
     <div className="fixed inset-0 z-[80] flex items-start justify-center overflow-y-auto bg-stone-900/60 p-4 pt-16 backdrop-blur-md">
