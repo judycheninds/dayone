@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { buildSchedule, scoreTask } from './scheduler';
+import { buildSchedule, compareTasks } from './scheduler';
 import { DEFAULT_CATEGORIES, DEFAULT_PREFS, type Task } from '../types';
 
 const NOW = new Date('2026-06-13T15:00:00'); // 3:00 PM
@@ -22,25 +22,32 @@ function task(over: Partial<Task>): Task {
 const build = (tasks: Task[], prefs = DEFAULT_PREFS, nowMin = NOW_MIN) =>
   buildSchedule(tasks, prefs, DEFAULT_CATEGORIES, nowMin, NOW);
 
-describe('scoreTask', () => {
-  it('ranks a test due tomorrow above chores due next week', () => {
-    const test = task({
-      category: 'study-test',
-      importance: 5,
-      dueISO: new Date('2026-06-14T23:59:00').toISOString(),
-    });
-    const chore = task({
-      category: 'chores',
-      importance: 1,
-      dueISO: new Date('2026-06-20T23:59:00').toISOString(),
-    });
-    expect(scoreTask(test, WEIGHTS, NOW)).toBeGreaterThan(scoreTask(chore, WEIGHTS, NOW));
+describe('compareTasks', () => {
+  it('ranks by category first, regardless of task stars', () => {
+    // A 3-star test outranks a 5-star quiz because the test category ranks higher.
+    const test = task({ category: 'study-test', importance: 3 });
+    const quiz = task({ category: 'study-quiz', importance: 5 });
+    expect(compareTasks(test, quiz, WEIGHTS, NOW)).toBeLessThan(0); // test first
   });
 
-  it('weights nearer due dates higher, all else equal', () => {
-    const soon = task({ dueISO: new Date('2026-06-13T23:59:00').toISOString() });
+  it('uses task stars to break ties within the same category', () => {
+    const quizHi = task({ category: 'study-quiz', importance: 5 });
+    const quizLo = task({ category: 'study-quiz', importance: 3 });
+    expect(compareTasks(quizHi, quizLo, WEIGHTS, NOW)).toBeLessThan(0); // 5★ first
+  });
+
+  it("matches the user's example order: test, then 5★ quiz, then 3★ quiz", () => {
+    const test = task({ title: 'test', category: 'study-test', importance: 3 });
+    const quiz5 = task({ title: 'quiz5', category: 'study-quiz', importance: 5 });
+    const quiz3 = task({ title: 'quiz3', category: 'study-quiz', importance: 3 });
+    const order = [quiz3, quiz5, test].sort((a, b) => compareTasks(a, b, WEIGHTS, NOW)).map((t) => t.title);
+    expect(order).toEqual(['test', 'quiz5', 'quiz3']);
+  });
+
+  it('falls back to earliest due date when category and stars tie', () => {
+    const soon = task({ dueISO: new Date('2026-06-14T23:59:00').toISOString() });
     const later = task({ dueISO: new Date('2026-06-27T23:59:00').toISOString() });
-    expect(scoreTask(soon, WEIGHTS, NOW)).toBeGreaterThan(scoreTask(later, WEIGHTS, NOW));
+    expect(compareTasks(soon, later, WEIGHTS, NOW)).toBeLessThan(0);
   });
 });
 

@@ -2,26 +2,26 @@ import type { CategoryDef, Prefs, ScheduleBlock, ScheduleResult, Task } from '..
 import { daysUntil } from './time';
 
 /**
- * Priority score for a task (higher = do sooner).
- * Combines three 0–10 sub-scores: due-date urgency, category weight, user importance.
- * Pure: urgency is computed against the passed-in `now`, never Date.now().
+ * Compare two tasks for scheduling priority (negative → `a` first). Strictly
+ * lexicographic:
+ *   1. Category rank (the per-category stars set in Settings), highest first.
+ *   2. Task importance (the stars set when adding the task), highest first —
+ *      this only differentiates tasks within the same category.
+ *   3. Earliest due date, as a final tiebreak.
  */
-export function scoreTask(
-  task: Task,
+export function compareTasks(
+  a: Task,
+  b: Task,
   weightOf: Record<string, number>,
   now: Date,
 ): number {
-  const d = daysUntil(task.dueISO, now);
-  // Urgency: overdue/today ≈ 10, a week out ≈ 1.25, decays smoothly.
-  const urgency = clamp(10 / (1 + Math.max(d, 0)), 0, 10);
-  // Category weight and importance are both 1–5; scale to a 0–10 sub-score.
-  const category = clamp((weightOf[task.category] ?? 3) * 2, 0, 10);
-  const importance = clamp(task.importance * 2, 0, 10);
-  return urgency + category + importance;
-}
-
-function clamp(n: number, lo: number, hi: number): number {
-  return Math.max(lo, Math.min(hi, n));
+  const catA = weightOf[a.category] ?? 3;
+  const catB = weightOf[b.category] ?? 3;
+  return (
+    catB - catA ||
+    b.importance - a.importance ||
+    daysUntil(a.dueISO, now) - daysUntil(b.dueISO, now)
+  );
 }
 
 let blockSeq = 0;
@@ -59,8 +59,8 @@ export function buildSchedule(
 
   const flexible = pending
     .filter((t) => t.fixedStartMin == null)
-    .map((t) => ({ t, score: scoreTask(t, weightOf, now) }))
-    .sort((a, b) => b.score - a.score || daysUntil(a.t.dueISO, now) - daysUntil(b.t.dueISO, now));
+    .map((t) => ({ t }))
+    .sort((a, b) => compareTasks(a.t, b.t, weightOf, now));
 
   const blocks: ScheduleBlock[] = [];
   const overflow: Task[] = [];
