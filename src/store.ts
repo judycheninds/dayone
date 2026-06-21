@@ -19,6 +19,7 @@ import {
   saveUserData,
   setSession,
 } from './lib/localdb';
+import { cloudSession, loadCache, clearSession, type CloudSnapshot } from './lib/api';
 
 export type View = 'plan' | 'run';
 
@@ -55,6 +56,8 @@ interface NewTaskInput {
 interface State {
   account: Account | null;
   cloudUserId: string | null;
+  /** Username when signed into the cross-device cloud backend. */
+  cloudUser: string | null;
   prefs: Prefs;
   tasks: Task[];
   categories: CategoryDef[];
@@ -68,6 +71,8 @@ interface State {
   loginLocal: (username: string, password: string) => Promise<void>;
   bootstrap: () => void;
   signOut: () => void;
+  /** Apply a cloud snapshot + mark the session as cloud-synced. */
+  applyAuth: (snap: CloudSnapshot, username: string) => void;
 
   // account / prefs (cloud mode helpers)
   createAccount: (a: Account, prefs: Prefs) => void;
@@ -131,6 +136,7 @@ function loadCats(cats?: CategoryDef[]): CategoryDef[] {
 const loggedOut = {
   account: null,
   cloudUserId: null,
+  cloudUser: null,
   tasks: [],
   running: false,
   view: 'plan' as View,
@@ -140,6 +146,7 @@ const loggedOut = {
 export const useStore = create<State>()((set, get) => ({
   account: null,
   cloudUserId: null,
+  cloudUser: null,
   prefs: DEFAULT_PREFS,
   tasks: [],
   categories: DEFAULT_CATEGORIES,
@@ -174,7 +181,26 @@ export const useStore = create<State>()((set, get) => ({
     });
   },
 
+  applyAuth: (snap, username) =>
+    set({
+      ...loggedOut,
+      cloudUser: username,
+      account: { name: snap.name || username, email: snap.email || '' },
+      prefs: snap.prefs || DEFAULT_PREFS,
+      tasks: snap.tasks || [],
+      categories: loadCats(snap.categories),
+      startMin: snap.startMin ?? minutesOfDay(new Date()),
+    }),
+
   bootstrap: () => {
+    // Cloud session takes priority: hydrate from cache instantly (Sync pulls fresh).
+    const cloud = cloudSession();
+    if (cloud) {
+      const cache = loadCache(cloud.username);
+      if (cache) get().applyAuth(cache, cloud.username);
+      else set({ cloudUser: cloud.username });
+      return;
+    }
     const u = getSession();
     if (!u) return;
     const snap = loadUserData(u);
@@ -190,6 +216,7 @@ export const useStore = create<State>()((set, get) => ({
 
   signOut: () => {
     setSession(null);
+    clearSession();
     set({ ...loggedOut, prefs: DEFAULT_PREFS, categories: DEFAULT_CATEGORIES });
   },
 

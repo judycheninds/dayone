@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { useStore } from '../store';
-import { BREAK_CADENCES, BREAK_LENGTHS, DEFAULT_PREFS, WINDDOWN_OPTIONS } from '../types';
+import { BREAK_CADENCES, BREAK_LENGTHS, DEFAULT_CATEGORIES, DEFAULT_PREFS, WINDDOWN_OPTIONS } from '../types';
+import { signupCloud, loginCloud, UnavailableError } from '../lib/api';
 import { input, btnPrimary } from './ui';
 import { TimeField } from './TimeField';
 
@@ -9,6 +10,7 @@ type Mode = 'signup' | 'login';
 export function Onboarding() {
   const signupLocal = useStore((s) => s.signupLocal);
   const loginLocal = useStore((s) => s.loginLocal);
+  const applyAuth = useStore((s) => s.applyAuth);
 
   const [mode, setMode] = useState<Mode>('signup');
   const [username, setUsername] = useState('');
@@ -27,17 +29,42 @@ export function Onboarding() {
     setError('');
     if (!username.trim()) return setError('Please choose a username.');
     setBusy(true);
+    const u = username.trim();
+    const em = email.trim();
+    const prefs = {
+      ...DEFAULT_PREFS,
+      sleepMin: sleep,
+      windDownMin: windDown,
+      breakCadence: cadence,
+      breakMinutes: breakLen,
+    };
+    const d = new Date();
+    const nowMin = d.getHours() * 60 + d.getMinutes();
     try {
       if (mode === 'signup') {
-        await signupLocal(username.trim(), email.trim(), password, {
-          ...DEFAULT_PREFS,
-          sleepMin: sleep,
-          windDownMin: windDown,
-          breakCadence: cadence,
-          breakMinutes: breakLen,
-        });
+        const snap = {
+          name: u,
+          email: em,
+          prefs,
+          tasks: [],
+          startMin: nowMin,
+          categories: DEFAULT_CATEGORIES,
+        };
+        try {
+          await signupCloud(u, em, password, snap);
+          applyAuth(snap, u); // cross-device cloud account
+        } catch (err) {
+          if (err instanceof UnavailableError) await signupLocal(u, em, password, prefs);
+          else throw err;
+        }
       } else {
-        await loginLocal(username.trim(), password);
+        try {
+          const snap = await loginCloud(u, password);
+          applyAuth(snap, u);
+        } catch (err) {
+          if (err instanceof UnavailableError) await loginLocal(u, password);
+          else throw err;
+        }
       }
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Something went wrong.');

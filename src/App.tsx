@@ -9,7 +9,7 @@ import { RewardsCard } from './components/RewardsCard';
 import { TaskDetailsCard } from './components/TaskDetailsCard';
 import { ScheduleWarning } from './components/ScheduleWarning';
 import { Settings } from './components/Settings';
-import { CloudSync } from './components/CloudSync';
+import { Sync } from './components/Sync';
 import { TimeBackground } from './components/TimeBackground';
 import { TimeField } from './components/TimeField';
 
@@ -21,14 +21,14 @@ export default function App() {
   const startMin = useStore((s) => s.startMin);
   const setStartMin = useStore((s) => s.setStartMin);
   const running = useStore((s) => s.running);
-  const cloudUserId = useStore((s) => s.cloudUserId);
+  const cloudUser = useStore((s) => s.cloudUser);
   const [showSettings, setShowSettings] = useState(false);
 
   if (!account) {
     return (
       <>
         <TimeBackground />
-        <CloudSync />
+        <Sync />
         <Onboarding />
       </>
     );
@@ -37,7 +37,7 @@ export default function App() {
   return (
     <div className="mx-auto min-h-full max-w-3xl px-4 pb-20 sm:px-6">
       <TimeBackground />
-      <CloudSync />
+      <Sync />
 
       <header className="flex items-center justify-between gap-3 py-6">
         <div className="flex items-center gap-2.5">
@@ -85,9 +85,9 @@ export default function App() {
               <span className="font-semibold text-[var(--accent)]">{fmtMin(prefs.sleepMin)}</span>
             </span>
             <span className="ml-auto inline-flex items-center gap-1.5 text-xs text-stone-400">
-              {cloudUserId ? (
+              {cloudUser ? (
                 <>
-                  <span className="h-1.5 w-1.5 rounded-full bg-emerald-500" /> Synced
+                  <span className="h-1.5 w-1.5 rounded-full bg-emerald-500" /> Synced across devices
                 </>
               ) : (
                 <>
