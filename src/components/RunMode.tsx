@@ -184,7 +184,10 @@ export function RunMode() {
       {done && <RewardsCard />}
 
       <PipPortal open={pipOpen} onClose={() => setPipOpen(false)}>
-        {card(true)}
+        <div className="relative h-full w-full">
+          {card(true)}
+          <Confetti fireKey={confettiKey} />
+        </div>
       </PipPortal>
     </div>
   );

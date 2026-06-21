@@ -9,14 +9,14 @@ const COLORS = ['#e5484d', '#f76808', '#3e63dd', '#8e4ec6', '#30a46c', '#f5a524'
  */
 export function Confetti({ fireKey }: { fireKey: number }) {
   if (!fireKey) return null;
-  const pieces = Array.from({ length: 28 }, (_, i) => i);
+  const pieces = Array.from({ length: 44 }, (_, i) => i);
   return (
-    <div key={fireKey} className="pointer-events-none fixed bottom-8 right-8 z-[70]" aria-hidden>
+    <div key={fireKey} className="pointer-events-none fixed bottom-6 right-6 z-[70]" aria-hidden>
       {pieces.map((i) => {
-        const tx = -(Math.random() * 190 + 10); // burst left
-        const ty = -(Math.random() * 190 + 30); // burst up
-        const rot = Math.random() * 760 - 380;
-        const size = 6 + Math.random() * 6;
+        const tx = -(Math.random() * 320 + 10); // burst left, wider spread
+        const ty = -(Math.random() * 320 + 20); // burst up, wider spread
+        const rot = Math.random() * 900 - 450;
+        const size = 7 + Math.random() * 8;
         const style: CSSProperties = {
           width: size,
           height: size,

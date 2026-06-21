@@ -18,7 +18,7 @@ export function DurationField({
   const compose = (hh: number, mm: number) => onChange(Math.max(5, hh * 60 + mm));
 
   const hours = [0, 1, 2, 3, 4, 5, 6, 7];
-  const minutes = [0, 15, 30, 45];
+  const minutes = [0, 10, 15, 30, 45];
 
   const cell = (selected: boolean) =>
     `rounded-lg py-1.5 text-sm tabular-nums transition ${
@@ -41,7 +41,7 @@ export function DurationField({
         </svg>
       </button>
       {open && (
-          <div className="absolute left-0 top-full z-50 mt-2 w-64 rounded-2xl border border-black/[0.06] bg-[var(--card)] p-3.5 shadow-[0_16px_40px_-12px_rgba(28,25,23,0.45)] fd-rise">
+          <div className="absolute right-0 top-full z-50 mt-2 w-64 rounded-2xl border border-black/[0.06] bg-[var(--card)] p-3.5 shadow-[0_16px_40px_-12px_rgba(28,25,23,0.45)] fd-rise">
             <div className="mb-3 text-center text-2xl font-bold tracking-tight text-[var(--accent)]">
               {fmtDur(value)}
             </div>
@@ -54,7 +54,7 @@ export function DurationField({
               ))}
             </div>
             <div className="mb-1 text-[11px] font-medium uppercase tracking-wider text-stone-400">Minutes</div>
-            <div className="mb-3 grid grid-cols-4 gap-1">
+            <div className="mb-3 grid grid-cols-5 gap-1">
               {minutes.map((mm) => (
                 <button type="button" key={mm} onClick={() => compose(h, mm)} className={cell(mm === m)}>
                   {mm.toString().padStart(2, '0')}
