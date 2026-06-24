@@ -31,7 +31,7 @@ function blockId(): string {
 }
 
 /**
- * Build an optimized, time-blocked schedule from `nowMin` until (sleep − windDown).
+ * Build an optimized, time-blocked schedule from `nowMin` until bedtime.
  * Pure function: same inputs → same output (also powers reflow).
  */
 export function buildSchedule(
@@ -47,7 +47,7 @@ export function buildSchedule(
   // Sleep may be past midnight relative to "now" (e.g. plan at 5pm, sleep 1am).
   let sleepMin = prefs.sleepMin;
   if (sleepMin <= nowMin) sleepMin += 1440;
-  const endLimitMin = sleepMin - prefs.windDownMin;
+  const endLimitMin = sleepMin;
 
   const pending = tasks.filter((t) => t.status === 'pending');
 

@@ -59,8 +59,6 @@ export interface Task {
 export interface Prefs {
   /** Target bedtime as minutes since midnight (e.g. 23:00 -> 1380). */
   sleepMin: number;
-  /** No tasks scheduled within this many minutes before sleep. */
-  windDownMin: number;
   /** Insert a break after this many minutes of cumulative work (60–120). */
   breakCadence: number;
   /** Length of an inserted break. */
@@ -81,8 +79,6 @@ export interface Prefs {
 export const BREAK_CADENCES = [60, 75, 90, 105, 120];
 /** Break-length options (minutes). */
 export const BREAK_LENGTHS = [5, 10, 15, 20];
-/** Wind-down buffer options (minutes). */
-export const WINDDOWN_OPTIONS = [0, 15, 30, 45, 60];
 
 export type BlockKind = 'task' | 'break';
 
@@ -102,7 +98,7 @@ export interface ScheduleBlock {
 
 export interface ScheduleResult {
   blocks: ScheduleBlock[];
-  /** Tasks that could not be fit before (sleep − windDown). */
+  /** Tasks that could not be fit before bedtime. */
   overflow: Task[];
   fits: boolean;
   /** Last usable minute of the day for tasks. */
@@ -111,7 +107,6 @@ export interface ScheduleResult {
 
 export const DEFAULT_PREFS: Prefs = {
   sleepMin: 23 * 60,
-  windDownMin: 30,
   breakCadence: 60,
   breakMinutes: 10,
   rewardsEnabled: true,

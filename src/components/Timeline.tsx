@@ -136,7 +136,7 @@ export function Timeline() {
             })}
           </ol>
 
-          <Marker time={fmtMin(result.endLimitMin)} label="Wind down" />
+          <Marker time={fmtMin(result.endLimitMin)} label="Bedtime" />
         </div>
       )}
 

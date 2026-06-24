@@ -6,7 +6,7 @@ import { fmtDur, fmtMin } from '../lib/time';
 
 /**
  * Centered warning shown when the planned tasks don't fit between the start time
- * and bedtime (minus wind-down). Offers to push bedtime later or remove tasks.
+ * and bedtime. Offers to push bedtime later or remove tasks.
  */
 export function ScheduleWarning() {
   const schedule = useStore((s) => s.schedule);
@@ -36,7 +36,7 @@ export function ScheduleWarning() {
   const full = buildSchedule(tasks, { ...prefs, sleepMin: startMin + 24 * 60 }, categories, startMin, now);
   const lastEnd = full.blocks.reduce((mx, b) => (b.kind === 'task' ? Math.max(mx, b.endMin) : mx), startMin);
   const overMin = Math.max(0, lastEnd - result.endLimitMin);
-  const requiredSleep = lastEnd + prefs.windDownMin;
+  const requiredSleep = lastEnd;
   const newSleep = (((requiredSleep % 1440) + 1440) % 1440);
 
   return createPortal(

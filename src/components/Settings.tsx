@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { useStore } from '../store';
 import { signOut as cloudSignOut } from '../lib/cloud';
-import { BREAK_CADENCES, BREAK_LENGTHS, WINDDOWN_OPTIONS, normalizeWeight } from '../types';
+import { BREAK_CADENCES, BREAK_LENGTHS, normalizeWeight } from '../types';
 import { input } from './ui';
 import { SwatchPicker } from './SwatchPicker';
 import { StarRating } from './StarRating';
@@ -54,25 +54,6 @@ export function Settings({ onClose }: { onClose: () => void }) {
         <div className="mb-4">
           <span className="mb-1.5 block text-sm text-stone-600">Sleep by</span>
           <TimeField value={prefs.sleepMin} onChange={(m) => updatePrefs({ sleepMin: m })} />
-        </div>
-
-        <div className="mb-5">
-          <span className="mb-1.5 block text-sm text-stone-600">Wind-down buffer</span>
-          <div className="flex flex-wrap gap-2">
-            {WINDDOWN_OPTIONS.map((w) => (
-              <button
-                key={w}
-                onClick={() => updatePrefs({ windDownMin: w })}
-                className={`flex-1 rounded-xl border px-2 py-2.5 text-sm transition ${
-                  prefs.windDownMin === w
-                    ? 'border-[var(--accent)] bg-[var(--accent-weak)] text-[var(--accent)]'
-                    : 'border-stone-200 text-stone-500 hover:border-stone-300'
-                }`}
-              >
-                {w}m
-              </button>
-            ))}
-          </div>
         </div>
 
         <div className="mb-5">

@@ -131,7 +131,7 @@ export async function loginLocal(
     loadUserData(username) ?? {
       name: username,
       email: user.email,
-      prefs: { sleepMin: 1380, windDownMin: 30, breakCadence: 60, breakMinutes: 10, rewardsEnabled: true },
+      prefs: { sleepMin: 1380, breakCadence: 60, breakMinutes: 10, rewardsEnabled: true },
       tasks: [],
       startMin: 15 * 60,
       categories: [],
