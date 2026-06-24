@@ -26,9 +26,11 @@ export function RunMode() {
   const [pipOpen, setPipOpen] = useState(false);
   const [confettiKey, setConfettiKey] = useState(0);
 
-  // 1-second tick while running.
+  // 1-second tick while running. Reset to the real time the instant the day
+  // starts so the first frame isn't computed from a stale `now`.
   useEffect(() => {
     if (!running) return;
+    setNow(new Date());
     const id = setInterval(() => setNow(new Date()), 1000);
     return () => clearInterval(id);
   }, [running]);
@@ -54,12 +56,15 @@ export function RunMode() {
 
   useEffect(() => () => clearNotices(), []);
 
-  // Derived run state (null-safe so hooks stay unconditional).
+  // Derived run state (null-safe so hooks stay unconditional). Clamp the clock to
+  // never read before the snapshot anchor, so elapsed time can't go negative
+  // (which would make the countdown briefly exceed the task's duration).
   const live = running && snap ? snap : null;
-  const idx = live ? activeIndex(live, now) : -1;
+  const clock = live ? new Date(Math.max(now.getTime(), live.anchorMs)) : now;
+  const idx = live ? activeIndex(live, clock) : -1;
   const done = !!live && idx < 0;
   const active = live && idx >= 0 ? live.blocks[idx] : null;
-  const nowMin = live ? snapshotNowMin(live, now) : 0;
+  const nowMin = live ? snapshotNowMin(live, clock) : 0;
   const secondsLeft = active ? (active.endMin - nowMin) * 60 : 0;
   const fraction = active
     ? (nowMin - active.startMin) / Math.max(1, active.endMin - active.startMin)
