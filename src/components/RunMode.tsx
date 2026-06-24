@@ -25,6 +25,7 @@ export function RunMode() {
   const [now, setNow] = useState(() => new Date());
   const [pipOpen, setPipOpen] = useState(false);
   const [confettiKey, setConfettiKey] = useState(0);
+  const [confirming, setConfirming] = useState(false);
 
   // 1-second tick while running. Reset to the real time the instant the day
   // starts so the first frame isn't computed from a stale `now`.
@@ -55,6 +56,23 @@ export function RunMode() {
   }, [running, snap]);
 
   useEffect(() => () => clearNotices(), []);
+
+  // Auto-open the floating timer when the user leaves the tab (best-effort —
+  // browsers may block Document PiP without recent user activation).
+  useEffect(() => {
+    if (!running) return;
+    const onVis = () => {
+      if (document.hidden && isPipSupported()) setPipOpen(true);
+    };
+    document.addEventListener('visibilitychange', onVis);
+    return () => document.removeEventListener('visibilitychange', onVis);
+  }, [running]);
+
+  // Stop confirming if the active block changes or the day ends.
+  const activeId = running && snap ? snap.blocks[activeIndex(snap, now)]?.id : undefined;
+  useEffect(() => {
+    setConfirming(false);
+  }, [activeId, running]);
 
   // Derived run state (null-safe so hooks stay unconditional). Clamp the clock to
   // never read before the snapshot anchor, so elapsed time can't go negative
@@ -120,6 +138,16 @@ export function RunMode() {
     reflowFinish();
   };
 
+  // Tasks require a confirmation step; breaks can be skipped immediately.
+  const requestFinish = () => {
+    if (active?.kind === 'break') handleFinish();
+    else setConfirming(true);
+  };
+  const confirmFinish = () => {
+    setConfirming(false);
+    handleFinish();
+  };
+
   const activeTitle = active
     ? active.part
       ? `${active.title} (${active.part.index}/${active.part.total})`
@@ -136,8 +164,12 @@ export function RunMode() {
       isBreak={active?.kind === 'break'}
       done={done}
       compact={compact}
+      confirming={confirming}
       onExtend={reflowExtend}
-      onFinish={handleFinish}
+      onFinish={requestFinish}
+      onConfirm={confirmFinish}
+      onCancel={() => setConfirming(false)}
+      onClosePip={compact ? () => setPipOpen(false) : undefined}
     />
   );
 
@@ -148,12 +180,15 @@ export function RunMode() {
         <div className="min-h-[360px]">{card(false)}</div>
         <div className="flex items-center justify-between border-t border-stone-200 px-4 py-3 text-xs">
           {isPipSupported() ? (
-            <button onClick={() => setPipOpen((v) => !v)} className={`px-3 py-1.5 text-xs ${btnGhost}`}>
+            <button
+              onClick={() => setPipOpen((v) => !v)}
+              className={`px-3 py-1.5 text-xs ${btnGhost} ${pipOpen ? 'border-[var(--accent)] text-[var(--accent)]' : ''}`}
+            >
               <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                 <rect x="3" y="4" width="18" height="14" rx="2" />
                 <rect x="12" y="11" width="7" height="5" rx="1" fill="currentColor" />
               </svg>
-              {pipOpen ? 'Close floating timer' : 'Pop out floating timer'}
+              Floating timer
             </button>
           ) : (
             <span className="text-stone-400">Floating timer needs Chrome / Edge</span>

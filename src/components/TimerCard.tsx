@@ -9,8 +9,12 @@ interface Props {
   isBreak: boolean;
   done?: boolean;
   compact?: boolean; // PiP layout
+  confirming?: boolean; // awaiting "are you finished?" confirmation
   onExtend: (min: number) => void;
   onFinish: () => void;
+  onConfirm?: () => void;
+  onCancel?: () => void;
+  onClosePip?: () => void;
 }
 
 function clock(sec: number): string {
@@ -81,11 +85,23 @@ export function TimerCard(p: Props) {
   const stroke = p.compact ? 8 : 12;
 
   return (
-    <div className={`flex h-full flex-col items-center ${p.compact ? 'gap-2 p-3' : 'gap-5 p-7'}`}>
+    <div className={`relative flex h-full flex-col items-center ${p.compact ? 'gap-2 p-3' : 'gap-5 p-7'}`}>
+      {p.compact && p.onClosePip && (
+        <button
+          onClick={p.onClosePip}
+          aria-label="Close floating timer"
+          title="Close (timer keeps running)"
+          className="absolute right-2 top-2 grid h-6 w-6 place-items-center rounded-full text-stone-400 transition hover:bg-black/10 hover:text-stone-700"
+        >
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round">
+            <path d="M18 6 6 18M6 6l12 12" />
+          </svg>
+        </button>
+      )}
       <div className="flex items-center gap-2 text-xs">
         <span className="h-2 w-2 rounded-full" style={{ background: p.color }} />
         <span className="font-medium uppercase tracking-[0.14em] text-stone-500">
-          {p.isBreak ? 'Break' : over ? 'Overtime' : 'Focusing'}
+          {p.confirming ? 'Confirm' : p.isBreak ? 'Break' : over ? 'Overtime' : 'Focusing'}
         </span>
       </div>
 
@@ -106,24 +122,50 @@ export function TimerCard(p: Props) {
         </div>
       </div>
 
-      <div className="mt-auto flex w-full gap-2">
-        <button
-          onClick={() => p.onExtend(10)}
-          className={`flex-1 rounded-xl border border-stone-200 bg-white font-medium text-stone-700 transition hover:border-stone-300 hover:bg-stone-50 active:scale-[0.99] ${
-            p.compact ? 'py-1.5 text-xs' : 'py-3 text-sm'
-          }`}
-        >
-          +10 min
-        </button>
-        <button
-          onClick={p.onFinish}
-          className={`flex-1 rounded-xl bg-gradient-to-b from-emerald-500 to-emerald-600 font-medium text-white shadow-lg shadow-emerald-900/30 transition hover:from-emerald-400 hover:to-emerald-500 active:scale-[0.99] ${
-            p.compact ? 'py-1.5 text-xs' : 'py-3 text-sm'
-          }`}
-        >
-          {p.isBreak ? 'Skip' : 'Done ✓'}
-        </button>
-      </div>
+      {p.confirming ? (
+        <div className="mt-auto w-full">
+          {!p.compact && (
+            <p className="mb-2 text-center text-sm text-stone-500">Did you finish this task?</p>
+          )}
+          <div className="flex w-full gap-2">
+            <button
+              onClick={p.onCancel}
+              className={`flex-1 rounded-xl border border-stone-200 bg-white font-medium text-stone-700 transition hover:border-stone-300 hover:bg-stone-50 active:scale-[0.99] ${
+                p.compact ? 'py-1.5 text-xs' : 'py-3 text-sm'
+              }`}
+            >
+              Not yet
+            </button>
+            <button
+              onClick={p.onConfirm}
+              className={`flex-1 rounded-xl bg-gradient-to-b from-emerald-500 to-emerald-600 font-medium text-white shadow-lg shadow-emerald-900/30 transition hover:from-emerald-400 hover:to-emerald-500 active:scale-[0.99] ${
+                p.compact ? 'py-1.5 text-xs' : 'py-3 text-sm'
+              }`}
+            >
+              Yes, finished ✓
+            </button>
+          </div>
+        </div>
+      ) : (
+        <div className="mt-auto flex w-full gap-2">
+          <button
+            onClick={() => p.onExtend(10)}
+            className={`flex-1 rounded-xl border border-stone-200 bg-white font-medium text-stone-700 transition hover:border-stone-300 hover:bg-stone-50 active:scale-[0.99] ${
+              p.compact ? 'py-1.5 text-xs' : 'py-3 text-sm'
+            }`}
+          >
+            +10 min
+          </button>
+          <button
+            onClick={p.onFinish}
+            className={`flex-1 rounded-xl bg-gradient-to-b from-emerald-500 to-emerald-600 font-medium text-white shadow-lg shadow-emerald-900/30 transition hover:from-emerald-400 hover:to-emerald-500 active:scale-[0.99] ${
+              p.compact ? 'py-1.5 text-xs' : 'py-3 text-sm'
+            }`}
+          >
+            {p.isBreak ? 'Skip' : 'Done ✓'}
+          </button>
+        </div>
+      )}
     </div>
   );
 }
