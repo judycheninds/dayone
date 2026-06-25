@@ -58,6 +58,8 @@ interface State {
   cloudUserId: string | null;
   /** Username when signed into the cross-device cloud backend. */
   cloudUser: string | null;
+  /** Whether the cloud account's email is verified. */
+  emailVerified: boolean;
   prefs: Prefs;
   tasks: Task[];
   categories: CategoryDef[];
@@ -72,7 +74,8 @@ interface State {
   bootstrap: () => void;
   signOut: () => void;
   /** Apply a cloud snapshot + mark the session as cloud-synced. */
-  applyAuth: (snap: CloudSnapshot, username: string) => void;
+  applyAuth: (snap: CloudSnapshot, username: string, verified?: boolean) => void;
+  setEmailVerified: (v: boolean) => void;
 
   // account / prefs (cloud mode helpers)
   createAccount: (a: Account, prefs: Prefs) => void;
@@ -137,6 +140,7 @@ const loggedOut = {
   account: null,
   cloudUserId: null,
   cloudUser: null,
+  emailVerified: true,
   tasks: [],
   running: false,
   view: 'plan' as View,
@@ -147,6 +151,7 @@ export const useStore = create<State>()((set, get) => ({
   account: null,
   cloudUserId: null,
   cloudUser: null,
+  emailVerified: true,
   prefs: DEFAULT_PREFS,
   tasks: [],
   categories: DEFAULT_CATEGORIES,
@@ -181,16 +186,18 @@ export const useStore = create<State>()((set, get) => ({
     });
   },
 
-  applyAuth: (snap, username) =>
+  applyAuth: (snap, username, verified = true) =>
     set({
       ...loggedOut,
       cloudUser: username,
+      emailVerified: verified,
       account: { name: snap.name || username, email: snap.email || '' },
       prefs: snap.prefs || DEFAULT_PREFS,
       tasks: snap.tasks || [],
       categories: loadCats(snap.categories),
       startMin: snap.startMin ?? minutesOfDay(new Date()),
     }),
+  setEmailVerified: (v) => set({ emailVerified: v }),
 
   bootstrap: () => {
     // Cloud session takes priority: hydrate from cache instantly (Sync pulls fresh).

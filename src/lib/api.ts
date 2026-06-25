@@ -73,30 +73,53 @@ async function call(action: string, payload: Record<string, unknown>): Promise<a
   return data;
 }
 
+export interface AuthResult {
+  snapshot: CloudSnapshot;
+  verified: boolean;
+  emailSent?: boolean;
+}
+
 export async function signupCloud(
   u: string,
   email: string,
   password: string,
   snapshot: CloudSnapshot,
-): Promise<CloudSnapshot> {
+): Promise<AuthResult> {
   const r = await call('signup', { username: u, email, password, snapshot });
   setSession(r.token, u);
   saveCache(u, snapshot);
-  return r.snapshot;
+  return { snapshot: r.snapshot, verified: !!r.verified, emailSent: r.emailSent };
 }
 
-export async function loginCloud(u: string, password: string): Promise<CloudSnapshot> {
+export async function loginCloud(u: string, password: string): Promise<AuthResult> {
   const r = await call('login', { username: u, password });
   setSession(r.token, u);
   if (r.snapshot) saveCache(u, r.snapshot);
-  return r.snapshot;
+  return { snapshot: r.snapshot, verified: !!r.verified };
 }
 
-export async function pullCloud(): Promise<CloudSnapshot | null> {
+export async function pullCloud(): Promise<AuthResult | null> {
   if (!token || !username) return null;
   const r = await call('pull', { token });
-  if (r.snapshot) saveCache(username, r.snapshot);
-  return r.snapshot ?? null;
+  if (!r.snapshot) return null;
+  saveCache(username, r.snapshot);
+  return { snapshot: r.snapshot, verified: !!r.verified };
+}
+
+export async function verifyEmail(t: string): Promise<void> {
+  await call('verify', { token: t });
+}
+export async function resendVerify(): Promise<boolean> {
+  if (!token) return false;
+  const r = await call('resendVerify', { token });
+  return !!r.sent;
+}
+export async function requestReset(u: string): Promise<boolean> {
+  const r = await call('requestReset', { username: u });
+  return !!r.sent;
+}
+export async function resetPassword(t: string, password: string): Promise<void> {
+  await call('reset', { token: t, password });
 }
 
 export async function pushCloud(snapshot: CloudSnapshot): Promise<void> {

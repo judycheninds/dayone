@@ -1,6 +1,7 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useStore } from './store';
 import { fmtMin } from './lib/time';
+import { verifyEmail } from './lib/api';
 import { Onboarding } from './components/Onboarding';
 import { TaskEntry } from './components/TaskEntry';
 import { Timeline } from './components/Timeline';
@@ -10,8 +11,13 @@ import { TaskDetailsCard } from './components/TaskDetailsCard';
 import { ScheduleWarning } from './components/ScheduleWarning';
 import { Settings } from './components/Settings';
 import { Sync } from './components/Sync';
+import { ResetPassword } from './components/ResetPassword';
+import { VerifyBanner } from './components/VerifyBanner';
 import { TimeBackground } from './components/TimeBackground';
 import { TimeField } from './components/TimeField';
+
+const PARAMS = new URLSearchParams(window.location.search);
+const RESET_TOKEN = PARAMS.get('reset');
 
 export default function App() {
   const account = useStore((s) => s.account);
@@ -23,12 +29,41 @@ export default function App() {
   const running = useStore((s) => s.running);
   const cloudUser = useStore((s) => s.cloudUser);
   const [showSettings, setShowSettings] = useState(false);
+  const [verifyMsg, setVerifyMsg] = useState('');
+
+  // Handle an email-verification link (?verify=token) on load.
+  useEffect(() => {
+    const token = PARAMS.get('verify');
+    if (!token) return;
+    verifyEmail(token)
+      .then(() => {
+        useStore.getState().setEmailVerified(true);
+        setVerifyMsg('Email verified ✓');
+      })
+      .catch((e) => setVerifyMsg(e instanceof Error ? e.message : 'Verification failed'))
+      .finally(() => window.history.replaceState({}, '', window.location.pathname));
+  }, []);
+
+  // A password-reset link short-circuits everything else.
+  if (RESET_TOKEN) {
+    return (
+      <>
+        <TimeBackground />
+        <ResetPassword token={RESET_TOKEN} />
+      </>
+    );
+  }
 
   if (!account) {
     return (
       <>
         <TimeBackground />
         <Sync />
+        {verifyMsg && (
+          <div className="fixed left-1/2 top-4 z-[90] -translate-x-1/2 rounded-full bg-stone-900 px-4 py-2 text-sm font-medium text-white shadow-lg">
+            {verifyMsg}
+          </div>
+        )}
         <Onboarding />
       </>
     );
@@ -74,6 +109,13 @@ export default function App() {
           </button>
         </div>
       </header>
+
+      {verifyMsg && (
+        <div className="fixed left-1/2 top-4 z-[90] -translate-x-1/2 rounded-full bg-stone-900 px-4 py-2 text-sm font-medium text-white shadow-lg">
+          {verifyMsg}
+        </div>
+      )}
+      <VerifyBanner />
 
       {view === 'plan' ? (
         <div className="space-y-4 fd-rise">

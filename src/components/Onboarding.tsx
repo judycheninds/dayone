@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { useStore } from '../store';
 import { BREAK_CADENCES, BREAK_LENGTHS, DEFAULT_CATEGORIES, DEFAULT_PREFS } from '../types';
-import { signupCloud, loginCloud, UnavailableError } from '../lib/api';
+import { signupCloud, loginCloud, requestReset, UnavailableError } from '../lib/api';
 import { input, btnPrimary } from './ui';
 import { TimeField } from './TimeField';
 
@@ -22,6 +22,24 @@ export function Onboarding() {
   const [breakLen, setBreakLen] = useState(10);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState('');
+  const [info, setInfo] = useState('');
+
+  const forgotPassword = async () => {
+    setError('');
+    setInfo('');
+    const u = username.trim();
+    if (!u) return setError('Enter your username first, then tap "Forgot password".');
+    setBusy(true);
+    try {
+      await requestReset(u);
+      setInfo("If that account exists, we've emailed a password reset link.");
+    } catch (err) {
+      if (err instanceof UnavailableError) setError('Password reset needs the cloud backend (deployed site).');
+      else setError(err instanceof Error ? err.message : 'Something went wrong.');
+    } finally {
+      setBusy(false);
+    }
+  };
 
   const submit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -49,16 +67,16 @@ export function Onboarding() {
           categories: DEFAULT_CATEGORIES,
         };
         try {
-          await signupCloud(u, em, password, snap);
-          applyAuth(snap, u); // cross-device cloud account
+          const res = await signupCloud(u, em, password, snap);
+          applyAuth(res.snapshot ?? snap, u, res.verified); // cross-device cloud account
         } catch (err) {
           if (err instanceof UnavailableError) await signupLocal(u, em, password, prefs);
           else throw err;
         }
       } else {
         try {
-          const snap = await loginCloud(u, password);
-          applyAuth(snap, u);
+          const res = await loginCloud(u, password);
+          applyAuth(res.snapshot, u, res.verified);
         } catch (err) {
           if (err instanceof UnavailableError) await loginLocal(u, password);
           else throw err;
@@ -103,6 +121,7 @@ export function Onboarding() {
                 onClick={() => {
                   setMode(m);
                   setError('');
+                  setInfo('');
                 }}
                 className={`flex-1 rounded-full py-1.5 text-sm font-medium transition ${
                   mode === m ? 'bg-white text-stone-900 shadow-sm' : 'text-stone-500'
@@ -230,10 +249,26 @@ export function Onboarding() {
               {error}
             </p>
           )}
+          {info && (
+            <p className="mb-3 rounded-lg border border-emerald-200 bg-emerald-50 px-3 py-2 text-sm text-emerald-700">
+              {info}
+            </p>
+          )}
 
           <button type="submit" disabled={busy} className={`mt-2 w-full py-3 ${btnPrimary}`}>
             {busy ? 'Please wait…' : isSignup ? 'Create account' : 'Log in'}
           </button>
+
+          {!isSignup && (
+            <button
+              type="button"
+              onClick={forgotPassword}
+              disabled={busy}
+              className="mt-3 w-full text-center text-xs text-stone-500 underline-offset-2 transition hover:text-[var(--accent)] hover:underline"
+            >
+              Forgot password?
+            </button>
+          )}
 
           <button
             type="button"

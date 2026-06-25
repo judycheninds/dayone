@@ -13,8 +13,8 @@ export function Sync() {
     if (!sess) return;
     let active = true;
     pullCloud()
-      .then((snap) => {
-        if (active && snap) useStore.getState().applyAuth(snap, sess.username);
+      .then((r) => {
+        if (active && r?.snapshot) useStore.getState().applyAuth(r.snapshot, sess.username, r.verified);
       })
       .catch(() => {
         /* offline — the cached snapshot from bootstrap is already shown */
