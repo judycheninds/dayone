@@ -4,13 +4,14 @@ import {
   DEFAULT_PREFS,
   normalizeWeight,
   type CategoryDef,
+  type DayLog,
   type Importance,
   type Prefs,
   type ScheduleResult,
   type Task,
 } from './types';
 import { buildSchedule } from './lib/scheduler';
-import { minutesOfDay } from './lib/time';
+import { localDateKey, minutesOfDay } from './lib/time';
 import {
   getSession,
   loadUserData,
@@ -63,6 +64,8 @@ interface State {
   prefs: Prefs;
   tasks: Task[];
   categories: CategoryDef[];
+  /** Per-day log of completed tasks (for "previous days" / weekly history). */
+  history: DayLog[];
   view: View;
   startMin: number;
   running: boolean;
@@ -136,12 +139,23 @@ function loadCats(cats?: CategoryDef[]): CategoryDef[] {
     : DEFAULT_CATEGORIES;
 }
 
+/** Append a completed task to today's history log. */
+function logCompletion(history: DayLog[], task: Task): DayLog[] {
+  const date = localDateKey(new Date());
+  const entry = { title: task.title, category: task.category };
+  if (history.some((d) => d.date === date)) {
+    return history.map((d) => (d.date === date ? { ...d, tasks: [...d.tasks, entry] } : d));
+  }
+  return [{ date, tasks: [entry] }, ...history];
+}
+
 const loggedOut = {
   account: null,
   cloudUserId: null,
   cloudUser: null,
   emailVerified: true,
   tasks: [],
+  history: [],
   running: false,
   view: 'plan' as View,
   runSnapshot: null,
@@ -155,6 +169,7 @@ export const useStore = create<State>()((set, get) => ({
   prefs: DEFAULT_PREFS,
   tasks: [],
   categories: DEFAULT_CATEGORIES,
+  history: [],
   view: 'plan',
   startMin: minutesOfDay(new Date()),
   running: false,
@@ -182,6 +197,7 @@ export const useStore = create<State>()((set, get) => ({
       prefs: snap.prefs,
       tasks: snap.tasks,
       categories: loadCats(snap.categories),
+      history: snap.history || [],
       startMin: snap.startMin,
     });
   },
@@ -195,6 +211,7 @@ export const useStore = create<State>()((set, get) => ({
       prefs: snap.prefs || DEFAULT_PREFS,
       tasks: snap.tasks || [],
       categories: loadCats(snap.categories),
+      history: snap.history || [],
       startMin: snap.startMin ?? minutesOfDay(new Date()),
     }),
   setEmailVerified: (v) => set({ emailVerified: v }),
@@ -217,6 +234,7 @@ export const useStore = create<State>()((set, get) => ({
       prefs: snap.prefs,
       tasks: snap.tasks,
       categories: loadCats(snap.categories),
+      history: snap.history || [],
       startMin: snap.startMin,
     });
   },
@@ -258,9 +276,15 @@ export const useStore = create<State>()((set, get) => ({
   addTask: (t) => set((s) => ({ tasks: [...s.tasks, { ...t, id: uid(), status: 'pending' }] })),
   removeTask: (id) => set((s) => ({ tasks: s.tasks.filter((t) => t.id !== id) })),
   completeTask: (id, actualMinutes) =>
-    set((s) => ({
-      tasks: s.tasks.map((t) => (t.id === id ? { ...t, status: 'done', actualMinutes } : t)),
-    })),
+    set((s) => {
+      const t = s.tasks.find((x) => x.id === id);
+      return {
+        tasks: s.tasks.map((x) =>
+          x.id === id ? { ...x, status: 'done', actualMinutes, completedAt: new Date().toISOString() } : x,
+        ),
+        history: t && t.status !== 'done' ? logCompletion(s.history, t) : s.history,
+      };
+    }),
   addTimeToTask: (id, minutes) =>
     set((s) => ({
       tasks: s.tasks.map((t) => (t.id === id ? { ...t, estMinutes: t.estMinutes + minutes } : t)),
@@ -337,16 +361,21 @@ export const useStore = create<State>()((set, get) => ({
     const now = new Date();
     const idx = activeIndex(snap, now);
     let tasks = s.tasks;
+    let history = s.history;
     if (idx >= 0) {
       const active = snap.blocks[idx];
       if (active.kind === 'task' && active.taskId) {
+        const t = s.tasks.find((x) => x.id === active.taskId);
+        if (t && t.status !== 'done') history = logCompletion(history, t);
         const elapsed = Math.max(1, Math.round(snapshotNowMin(snap, now) - active.startMin));
-        tasks = s.tasks.map((t) =>
-          t.id === active.taskId ? { ...t, status: 'done', actualMinutes: elapsed } : t,
+        tasks = s.tasks.map((x) =>
+          x.id === active.taskId
+            ? { ...x, status: 'done', actualMinutes: elapsed, completedAt: now.toISOString() }
+            : x,
         );
       }
     }
-    set({ tasks, runSnapshot: rebuildSnapshot(tasks, s.prefs, s.categories, now) });
+    set({ tasks, history, runSnapshot: rebuildSnapshot(tasks, s.prefs, s.categories, now) });
   },
 
   schedule: (now = new Date()) => {
@@ -366,6 +395,7 @@ useStore.subscribe((s) => {
       tasks: s.tasks,
       startMin: s.startMin,
       categories: s.categories,
+      history: s.history,
     });
   }
 });

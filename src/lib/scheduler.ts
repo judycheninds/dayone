@@ -1,5 +1,10 @@
 import type { CategoryDef, Prefs, ScheduleBlock, ScheduleResult, Task } from '../types';
-import { daysUntil } from './time';
+import { calDayDiff, daysUntil } from './time';
+
+/** A task is "due soon" (must fit today) if it's due today, tomorrow, or overdue. */
+function isDueSoon(task: Task, now: Date): boolean {
+  return calDayDiff(task.dueISO, now) <= 1;
+}
 
 /**
  * Compare two tasks for scheduling priority (negative → `a` first). Strictly
@@ -57,13 +62,17 @@ export function buildSchedule(
     .map((t) => ({ t, start: t.fixedStartMin!, end: t.fixedStartMin! + t.estMinutes }))
     .sort((a, b) => a.start - b.start);
 
+  // Flexible tasks: due-soon tasks get first claim on the day; non-urgent ones
+  // only fill leftover time (and are otherwise saved for later, not warned about).
   const flexible = pending
     .filter((t) => t.fixedStartMin == null)
-    .map((t) => ({ t }))
-    .sort((a, b) => compareTasks(a.t, b.t, weightOf, now));
+    .sort((a, b) => compareTasks(a, b, weightOf, now));
+  const urgent = flexible.filter((t) => isDueSoon(t, now));
+  const later = flexible.filter((t) => !isDueSoon(t, now));
 
   const blocks: ScheduleBlock[] = [];
   const overflow: Task[] = [];
+  const deferred: Task[] = [];
 
   // 1) Place all pinned tasks at their exact times.
   for (const f of fixed) {
@@ -99,7 +108,8 @@ export function buildSchedule(
   const cadence = prefs.breakCadence;
   const breakLen = prefs.breakMinutes;
   const TOL = 15;
-  const queue = flexible.map((f) => ({ task: f.t, remaining: f.t.estMinutes }));
+  // Urgent tasks first so they're guaranteed the available time; later tasks fill the rest.
+  const queue = [...urgent, ...later].map((t) => ({ task: t, remaining: t.estMinutes }));
   let qi = 0; // index of the first not-yet-finished task
 
   for (const [s, e] of gaps) {
@@ -137,9 +147,13 @@ export function buildSchedule(
       if (item.remaining <= 0) qi++;
     }
   }
-  // Anything not fully placed overflows.
+  // Unplaced urgent tasks overflow (triggers the warning); unplaced non-urgent
+  // tasks are simply saved for later — no warning.
   for (let i = qi; i < queue.length; i++) {
-    if (queue[i].remaining > 0) overflow.push(queue[i].task);
+    if (queue[i].remaining > 0) {
+      if (isDueSoon(queue[i].task, now)) overflow.push(queue[i].task);
+      else deferred.push(queue[i].task);
+    }
   }
 
   // Tag split tasks with part info (kept off the title so the UI can style it).
@@ -154,7 +168,7 @@ export function buildSchedule(
   }
 
   blocks.sort((a, b) => a.startMin - b.startMin);
-  return { blocks, overflow, fits: overflow.length === 0, endLimitMin };
+  return { blocks, overflow, deferred, fits: overflow.length === 0, endLimitMin };
 }
 
 /** Total minutes of actual task work in a schedule (excludes breaks). */

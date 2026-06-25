@@ -46,6 +46,7 @@ export interface Task {
   estMinutes: number; // expected duration
   status: TaskStatus;
   actualMinutes?: number; // filled in once completed / overrun
+  completedAt?: string; // ISO timestamp when marked done
   /** If set, the task is pinned to this start time (minutes since midnight). */
   fixedStartMin?: number;
   /** Free-form notes / details for the task. */
@@ -98,11 +99,19 @@ export interface ScheduleBlock {
 
 export interface ScheduleResult {
   blocks: ScheduleBlock[];
-  /** Tasks that could not be fit before bedtime. */
+  /** Urgent tasks (due today/tomorrow) that could not be fit before bedtime. */
   overflow: Task[];
+  /** Non-urgent tasks that didn't fit today — saved for later, no warning. */
+  deferred: Task[];
   fits: boolean;
   /** Last usable minute of the day for tasks. */
   endLimitMin: number;
+}
+
+/** A day's completed-task log, for the "previous days" / weekly history. */
+export interface DayLog {
+  date: string; // local yyyy-mm-dd
+  tasks: { title: string; category: Category }[];
 }
 
 export const DEFAULT_PREFS: Prefs = {

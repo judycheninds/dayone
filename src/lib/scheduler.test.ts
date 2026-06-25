@@ -82,10 +82,19 @@ describe('buildSchedule', () => {
     expect(r.blocks.some((b) => b.kind === 'break')).toBe(true);
   });
 
-  it('overflows tasks that cannot fit before bedtime', () => {
-    const r = build([task({ title: 'huge', estMinutes: 2000 })]);
+  it('overflows urgent (due-soon) tasks that cannot fit before bedtime', () => {
+    const r = build([task({ title: 'huge', estMinutes: 2000, dueISO: new Date('2026-06-14T23:59:00').toISOString() })]);
     expect(r.fits).toBe(false);
     expect(r.overflow.length).toBeGreaterThan(0);
+    expect(r.deferred.length).toBe(0);
+  });
+
+  it('defers (does not warn about) non-urgent tasks that do not fit', () => {
+    // due in a week and too big for the day → saved for later, no overflow
+    const r = build([task({ title: 'someday', estMinutes: 2000, dueISO: new Date('2026-06-27T23:59:00').toISOString() })]);
+    expect(r.fits).toBe(true);
+    expect(r.overflow.length).toBe(0);
+    expect(r.deferred.map((t) => t.title)).toContain('someday');
   });
 
   it('handles a bedtime past midnight', () => {

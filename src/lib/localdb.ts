@@ -4,7 +4,7 @@
  * own namespaced key. This is demo-grade auth — fine for a client-only app, not
  * a substitute for a real server.
  */
-import { DEFAULT_CATEGORIES, DEFAULT_PREFS, type CategoryDef, type Prefs, type Task } from '../types';
+import { DEFAULT_CATEGORIES, DEFAULT_PREFS, type CategoryDef, type DayLog, type Prefs, type Task } from '../types';
 
 const USERS_KEY = 'dayone-users';
 const SESSION_KEY = 'dayone-session';
@@ -17,6 +17,7 @@ export interface UserSnapshot {
   tasks: Task[];
   startMin: number;
   categories: CategoryDef[];
+  history?: DayLog[];
 }
 
 interface StoredUser {

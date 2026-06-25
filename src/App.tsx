@@ -9,6 +9,8 @@ import { RunMode } from './components/RunMode';
 import { RewardsCard } from './components/RewardsCard';
 import { TaskDetailsCard } from './components/TaskDetailsCard';
 import { ScheduleWarning } from './components/ScheduleWarning';
+import { SavedForLater } from './components/SavedForLater';
+import { HistoryModal } from './components/HistoryModal';
 import { Settings } from './components/Settings';
 import { Sync } from './components/Sync';
 import { ResetPassword } from './components/ResetPassword';
@@ -29,6 +31,7 @@ export default function App() {
   const running = useStore((s) => s.running);
   const cloudUser = useStore((s) => s.cloudUser);
   const [showSettings, setShowSettings] = useState(false);
+  const [showHistory, setShowHistory] = useState(false);
   const [verifyMsg, setVerifyMsg] = useState('');
 
   // Handle an email-verification link (?verify=token) on load.
@@ -140,6 +143,7 @@ export default function App() {
           </div>
           <TaskEntry />
           <Timeline />
+          <SavedForLater />
           <TaskDetailsCard />
           <RewardsCard />
         </div>
@@ -149,10 +153,25 @@ export default function App() {
         </div>
       )}
 
+      {/* Bottom tab: review completed tasks day-by-day + the weekly planner. */}
+      <div className="mt-6 flex justify-center">
+        <button
+          onClick={() => setShowHistory(true)}
+          className="inline-flex items-center gap-2 rounded-full border border-stone-200 bg-[var(--card)] px-4 py-2 text-sm font-medium text-stone-600 shadow-sm transition hover:border-stone-300 hover:text-stone-900"
+        >
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+            <rect x="3" y="4" width="18" height="18" rx="2" />
+            <path d="M3 10h18M8 2v4M16 2v4" />
+          </svg>
+          View previous days
+        </button>
+      </div>
+
       {/* Rendered outside any transformed (fd-rise) container so `fixed` is
           relative to the viewport — centers and darkens the whole tab. */}
       {view === 'plan' && <ScheduleWarning />}
       {showSettings && <Settings onClose={() => setShowSettings(false)} />}
+      {showHistory && <HistoryModal onClose={() => setShowHistory(false)} />}
     </div>
   );
 }

@@ -65,6 +65,7 @@ export function Onboarding() {
           tasks: [],
           startMin: nowMin,
           categories: DEFAULT_CATEGORIES,
+          history: [],
         };
         try {
           const res = await signupCloud(u, em, password, snap);

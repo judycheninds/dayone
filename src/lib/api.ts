@@ -1,6 +1,6 @@
 /** Client for the DayOne sync backend (Netlify Function). Falls back to local
  *  accounts when the backend isn't reachable (e.g. plain `vite` dev). */
-import type { CategoryDef, Prefs, Task } from '../types';
+import type { CategoryDef, DayLog, Prefs, Task } from '../types';
 
 const ENDPOINT = '/.netlify/functions/sync';
 const TOKEN_KEY = 'dayone-token';
@@ -14,6 +14,7 @@ export interface CloudSnapshot {
   tasks: Task[];
   startMin: number;
   categories: CategoryDef[];
+  history?: DayLog[];
 }
 
 export class UnavailableError extends Error {

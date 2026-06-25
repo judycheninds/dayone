@@ -67,3 +67,17 @@ export function daysUntil(dueISO: string, now: Date): number {
   const due = new Date(dueISO).getTime();
   return (due - now.getTime()) / DAY_MS;
 }
+
+/** Local yyyy-mm-dd key for a date. */
+export function localDateKey(d: Date): string {
+  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+}
+
+/** Whole-calendar-day difference between a due date and `now` (today=0, tomorrow=1, overdue<0). */
+export function calDayDiff(dueISO: string, now: Date): number {
+  const due = new Date(dueISO);
+  due.setHours(0, 0, 0, 0);
+  const n = new Date(now);
+  n.setHours(0, 0, 0, 0);
+  return Math.round((due.getTime() - n.getTime()) / DAY_MS);
+}

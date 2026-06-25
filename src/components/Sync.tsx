@@ -35,6 +35,7 @@ export function Sync() {
         tasks: s.tasks,
         startMin: s.startMin,
         categories: s.categories,
+        history: s.history,
       };
       const json = JSON.stringify(snapshot);
       if (json === lastJson.current) return;
